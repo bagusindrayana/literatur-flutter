@@ -8,6 +8,7 @@ class BookCard extends StatefulWidget {
   final bool? isSelected;
   final Function? onSelect;
   final Function? onLongPress;
+  final Function? onTap;
 
   BookCard(
       {required this.title,
@@ -15,7 +16,8 @@ class BookCard extends StatefulWidget {
       this.selectMode,
       this.isSelected,
       this.onSelect,
-      this.onLongPress});
+      this.onLongPress,
+      this.onTap});
 
   @override
   _BookCardState createState() => _BookCardState();
@@ -30,7 +32,6 @@ class _BookCardState extends State<BookCard> {
     setState(() {
       isSelected = widget.isSelected ?? false;
     });
-    print("BOOK");
   }
 
   @override
@@ -46,6 +47,7 @@ class _BookCardState extends State<BookCard> {
             widget.onLongPress!();
           }
         },
+        onTap: widget.onTap as void Function()?,
         child: Stack(children: [
           Align(
             alignment: Alignment.center,

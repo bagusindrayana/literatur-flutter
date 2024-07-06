@@ -224,6 +224,12 @@ class _HomePageState extends State<HomePage> {
                               setState(() {});
                             }
                           },
+                          onTap: () {
+                            print("CLIK");
+                            //navigate to /view with argument books[index]
+                            Navigator.pushNamed(context, '/view',
+                                arguments: books[index]);
+                          },
                         );
                       },
                     ),

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cached_memory_image/cached_memory_image.dart';
 import 'package:Literatur/models/Book.dart';
 import 'package:flutter/material.dart';
 import 'package:epubx/epubx.dart';
@@ -98,7 +99,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
 class PagingChapter {
   final String title;
   final String content;
-  final images.Image? image;
+  final CachedMemoryImage? image;
 
   PagingChapter(this.title, this.content, this.image);
 }
@@ -149,12 +150,28 @@ class _PagingTextState extends State<PagingText> {
 
     int index = 0;
     widget.chapters.forEach((EpubChapter chapter) {
-      if (index == 1) {
+      // if (index == 1) {
+      //   widget.images!.forEach((key, value) {
+      //     var imgData = images.decodeImage(value.Content!);
+      //     if(imgData != null){
+      //       _pageTexts.add(
+      //         PagingChapter("Image", "", widgets.Image.memory(Uint8List.fromList(images
+      //                           .encodePng(imgData)))));
+      //     }
+      //   });
+      // }
         widget.images!.forEach((key, value) {
-          _pageTexts.add(
-              PagingChapter("Image", "", images.decodeImage(value.Content!)));
+          var imgData = images.decodeImage(value.Content!);
+          if(imgData != null){
+            var imgWidget = CachedMemoryImage(
+  uniqueKey: value.FileName!,
+  bytes: Uint8List.fromList(images.encodePng(imgData)),
+);
+            _pageTexts.add(
+              
+              PagingChapter("Image", "", imgWidget));
+          }
         });
-      }
       splitChapter(chapter);
       index++;
     });
@@ -168,11 +185,13 @@ class _PagingTextState extends State<PagingText> {
 
   void splitChapter(EpubChapter chapter) {
     if (_pageKey.currentContext == null) return;
-    final document = parse(chapter.HtmlContent!);
-    final String parsedString =
-        parse(document.body!.text).documentElement!.text;
+    // final document = parse(chapter.HtmlContent!);
+    // final String parsedString =
+    //     parse(document.body!.text).documentElement!.text;
+    
+    final String parsedString = chapter.HtmlContent!.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), '');
 
-    images.Image? haveImage = null;
+    CachedMemoryImage? haveImage = null;
     // if (widget.images != null) {
     //   final htmlDocument = parsing.parseHtmlDocument(chapter.HtmlContent!);
     //   final allImages = htmlDocument.querySelectorAll("img");
@@ -260,8 +279,7 @@ class _PagingTextState extends State<PagingText> {
                     ? Column(
                         children: [
                           if (_pageTexts[_currentIndex].image != null)
-                            widgets.Image.memory(Uint8List.fromList(images
-                                .encodePng(_pageTexts[_currentIndex].image!))),
+                            _pageTexts[_currentIndex].image!,
                           Text(
                             _isPaging ? ' ' : _pageTexts[_currentIndex].content,
                             style: widget.style,

@@ -35,7 +35,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
 
     setState(() {
       chapters = epubBook.Chapters!;
-      images = bookContent.Images!;
+      //images = bookContent.Images!;
     });
 
     // setState(() {
@@ -150,28 +150,23 @@ class _PagingTextState extends State<PagingText> {
 
     int index = 0;
     widget.chapters.forEach((EpubChapter chapter) {
-      // if (index == 1) {
-      //   widget.images!.forEach((key, value) {
-      //     var imgData = images.decodeImage(value.Content!);
-      //     if(imgData != null){
-      //       _pageTexts.add(
-      //         PagingChapter("Image", "", widgets.Image.memory(Uint8List.fromList(images
-      //                           .encodePng(imgData)))));
-      //     }
-      //   });
-      // }
+      if (index == 0) {
         widget.images!.forEach((key, value) {
           var imgData = images.decodeImage(value.Content!);
           if(imgData != null){
             var imgWidget = CachedMemoryImage(
   uniqueKey: value.FileName!,
   bytes: Uint8List.fromList(images.encodePng(imgData)),
+  errorWidget: const Text('Error'),
+                placeholder: const CircularProgressIndicator(),
 );
             _pageTexts.add(
               
               PagingChapter("Image", "", imgWidget));
           }
         });
+      }
+        
       splitChapter(chapter);
       index++;
     });

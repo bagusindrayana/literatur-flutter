@@ -6,6 +6,7 @@ import 'package:Literatur/models/Book.dart';
 import 'package:flutter/material.dart';
 import 'package:epubx/epubx.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:logger/logger.dart';
 import "package:universal_html/parsing.dart" as parsing;
 import 'package:path/path.dart' as p;
@@ -31,6 +32,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
 
   //get chapter from book
   void getChapter() async {
+    await DefaultCacheManager().emptyCache();
     var targetFile = File(widget.book.filePath!);
     var bytes = await targetFile.readAsBytes();
     EpubBook epubBook = await EpubReader.readBook(bytes);
@@ -87,6 +89,10 @@ class _ViewBookPageState extends State<ViewBookPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("${widget.book.title}"),
+        actions: [
+          IconButton(onPressed: () {}, icon: Icon(Icons.bookmark_border)),
+          IconButton(onPressed: () {}, icon: Icon(Icons.translate_outlined)),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),

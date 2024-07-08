@@ -72,52 +72,64 @@ class _HomePageState extends State<HomePage> {
       }
 
       if (bytes != null) {
-        EpubBook epubBook = await EpubReader.readBook(bytes);
+        try {
+          EpubBook epubBook = await EpubReader.readBook(bytes);
 
-        images.Image? coverImage = epubBook.CoverImage;
-        if (coverImage == null) {
-          EpubContent bookContent = epubBook.Content!;
-          Map<String, EpubByteContentFile> _images = bookContent.Images!;
-          if (_images.isNotEmpty) {
-            EpubByteContentFile image = _images.values.first;
-            coverImage = images.decodeImage(image.Content!);
+          images.Image? coverImage = epubBook.CoverImage;
+          if (coverImage == null) {
+            EpubContent bookContent = epubBook.Content!;
+            Map<String, EpubByteContentFile> _images = bookContent.Images!;
+            if (_images.isNotEmpty) {
+              EpubByteContentFile image = _images.values.first;
+              coverImage = images.decodeImage(image.Content!);
+            }
           }
-        }
-        final timeString = DateTime.now().millisecondsSinceEpoch.toString();
-        final directory = await getApplicationDocumentsDirectory();
-        //copy file to storage
-        String saveDir = directory.path + '/books';
-        String savePath = '$saveDir/${timeString}_${file.name}';
-        File targetFile = File(savePath);
-        if (targetFile.existsSync()) {
-          targetFile.deleteSync();
-        }
-
-        targetFile.createSync(recursive: true);
-        targetFile.writeAsBytesSync(bytes);
-
-        //save image
-        if (coverImage != null) {
-          String coverImagePath = '$saveDir/${timeString}_${file.name}.jpg';
-          File coverImageFile = File(coverImagePath);
-          if (coverImageFile.existsSync()) {
-            coverImageFile.deleteSync();
+          final timeString = DateTime.now().millisecondsSinceEpoch.toString();
+          final directory = await getApplicationDocumentsDirectory();
+          //copy file to storage
+          String saveDir = directory.path + '/books';
+          String savePath = '$saveDir/${timeString}_${file.name}';
+          File targetFile = File(savePath);
+          if (targetFile.existsSync()) {
+            targetFile.deleteSync();
           }
 
-          coverImageFile.createSync(recursive: true);
-          coverImageFile.writeAsBytesSync(images.encodeJpg(coverImage));
-        }
+          targetFile.createSync(recursive: true);
+          targetFile.writeAsBytesSync(bytes);
 
-        Book newBook = Book();
-        newBook.title = file.name.replaceAll(file.extension.toString(), "");
-        newBook.filePath = savePath;
-        newBook.originalFilePath = file.path;
-        if (coverImage != null) {
-          newBook.coverImage = '$saveDir/${timeString}_${file.name}.jpg';
-        }
+          //save image
+          if (coverImage != null) {
+            String coverImagePath = '$saveDir/${timeString}_${file.name}.jpg';
+            File coverImageFile = File(coverImagePath);
+            if (coverImageFile.existsSync()) {
+              coverImageFile.deleteSync();
+            }
 
-        await _bookRepository.addBook(newBook, file.path);
-        _loadData();
+            coverImageFile.createSync(recursive: true);
+            coverImageFile.writeAsBytesSync(images.encodeJpg(coverImage));
+          }
+
+          Book newBook = Book();
+          newBook.title = file.name.replaceAll(file.extension.toString(), "");
+          newBook.filePath = savePath;
+          newBook.originalFilePath = file.path;
+          if (coverImage != null) {
+            newBook.coverImage = '$saveDir/${timeString}_${file.name}.jpg';
+          }
+
+          await _bookRepository.addBook(newBook, file.path);
+          _loadData();
+        } catch (e) {
+          Logger().e(e);
+          //show snackback error
+          var snackBar = SnackBar(
+            content: Text('${e}'),
+          );
+
+          // Find the ScaffoldMessenger in the widget tree
+          // and use it to show a SnackBar.
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        }
       }
     } else {
       // User canceled the picker

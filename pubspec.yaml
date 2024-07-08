@@ -37,13 +37,17 @@ dependencies:
   cupertino_icons: ^1.0.6
   logger: ^2.3.0
   file_picker: ^8.0.6
-  epubx: ^4.0.0
+  epubx:
+    git:
+      url: https://github.com/bagusindrayana/epubx.dart.git
+      ref: master
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
   path_provider: ^2.1.3
   universal_html: ^2.2.4
   html: ^0.15.4
   cached_memory_image: ^1.5.0
+  flutter_html: ^3.0.0-beta.2
 
 dev_dependencies:
   flutter_test:

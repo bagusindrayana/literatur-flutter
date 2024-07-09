@@ -1,9 +1,11 @@
+import 'package:Literatur/repositories/TranslateRepository.dart';
 import 'package:flutter/material.dart';
 import 'package:Literatur/models/Book.dart';
 import 'package:Literatur/repositories/BookRepository.dart';
 import 'package:Literatur/widgets/BookCard.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:epubx/epubx.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:logger/logger.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -21,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   TextEditingController _searchController = TextEditingController();
   BookRepository _bookRepository = BookRepository();
   StatusProcessBook loadDataStatus = StatusProcessBook.loading;
+  TranslateRepository _translateRepository = TranslateRepository();
 
   List<Book> books = [];
   List<Book> multiSelectBooks = [];
@@ -36,6 +39,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _multiDeleteBooks() async {
+    multiSelectBooks.forEach((element) {
+      _translateRepository.deleteTranslates(element.id);
+      //delete file
+      File file = File(element.filePath!);
+      if (file.existsSync()) {
+        file.deleteSync();
+      }
+
+      //delete cover image
+      if (element.coverImage != null) {
+        File coverImage = File(element.coverImage!);
+        if (coverImage.existsSync()) {
+          coverImage.deleteSync();
+        }
+      }
+    });
     await _bookRepository
         .deleteBooks(multiSelectBooks.map((e) => e.id).toList());
     multiSelectBooks.clear();
@@ -113,6 +132,7 @@ class _HomePageState extends State<HomePage> {
           newBook.title = file.name.replaceAll(file.extension.toString(), "");
           newBook.filePath = savePath;
           newBook.originalFilePath = file.path;
+          newBook.chapters = [];
           if (coverImage != null) {
             newBook.coverImage = '$saveDir/${timeString}_${file.name}.jpg';
           }
@@ -140,7 +160,12 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
+    // final gemini = Gemini.instance;
+    // gemini.text("what you can do?").then((value) {
+    //   print(value?.output);
+    // }).catchError((e) {
+    //   Logger().e(e);
+    // });
     _loadData();
   }
 
@@ -237,10 +262,13 @@ class _HomePageState extends State<HomePage> {
                             }
                           },
                           onTap: () {
-                            print("CLIK");
-                            //navigate to /view with argument books[index]
-                            Navigator.pushNamed(context, '/view',
-                                arguments: books[index]);
+                            if (!multiSelectMode) {
+                              Navigator.pushNamed(context, '/view',
+                                      arguments: books[index])
+                                  .then((v) {
+                                _loadData();
+                              });
+                            }
                           },
                         );
                       },

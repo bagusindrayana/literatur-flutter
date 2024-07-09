@@ -233,6 +233,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  dio:
+    dependency: transitive
+    description:
+      name: dio
+      sha256: e17f6b3097b8c51b72c74c9f071a605c47bcc8893839bd66732457a5ebe73714
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.5.0+1"
+  dio_web_adapter:
+    dependency: transitive
+    description:
+      name: dio_web_adapter
+      sha256: "36c5b2d79eb17cdae41e974b7a8284fec631651d2a6f39a8a2ff22327e90aeac"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   epubx:
     dependency: "direct main"
     description:
@@ -295,6 +311,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.3.2"
+  flutter_gemini:
+    dependency: "direct main"
+    description:
+      name: flutter_gemini
+      sha256: c6079dc6f95c6191e609e9cc627c268ef0bf2526cbba6a2f61aa41ea0053e9a0
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.4"
   flutter_html:
     dependency: "direct main"
     description:
@@ -329,6 +353,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  freezed_annotation:
+    dependency: transitive
+    description:
+      name: freezed_annotation
+      sha256: f54946fdb1fa7b01f780841937b1a80783a20b393485f3f6cdf336fd6f4705f2
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.2"
   frontend_server_client:
     dependency: transitive
     description:
@@ -425,6 +457,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.0+1"
+  japanese_word_tokenizer:
+    dependency: "direct main"
+    description:
+      name: japanese_word_tokenizer
+      sha256: "8f5361d144387f0d07e963d4fe8924fa26f27f822e791f31d3c2435083bd6411"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
+  jieba_flutter:
+    dependency: "direct main"
+    description:
+      name: jieba_flutter
+      sha256: "7b14e38346f780e4e0cfc8a74ff1cb984eed285f7b99bbd0aa00051b5db1d040"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.1"
   js:
     dependency: transitive
     description:
@@ -673,6 +721,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  simplytranslate:
+    dependency: "direct main"
+    description:
+      name: simplytranslate
+      sha256: "6edd2dfd2e8182e741b227acff36b244dc4201ca9c7ae1babe600cff7cc9c7c0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.2"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -790,6 +846,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  translator:
+    dependency: "direct main"
+    description:
+      name: translator
+      sha256: "03521d194365e758c66444a3b03005733e1daf0cd3de9c63257bf82b1a4e2ba1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   typed_data:
     dependency: transitive
     description:

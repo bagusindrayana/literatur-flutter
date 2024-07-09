@@ -1,4 +1,5 @@
 import 'package:Literatur/models/Book.dart';
+import 'package:Literatur/models/Translate.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:isar/isar.dart';
 
@@ -14,7 +15,7 @@ class BookRepository {
     } else {
       //if isar does not exist, create it
       isar = await Isar.open(
-        [BookSchema],
+        [BookSchema, TranslateSchema],
         directory: dir.path,
       );
       return isar;
@@ -69,6 +70,95 @@ class BookRepository {
         for (var id in ids) {
           await isar.books.delete(id);
         }
+      });
+    }
+  }
+
+  //update lastReadPosition
+  Future<void> updateLastReadPosition(int id, String lastReadPosition) async {
+    final isar = await initDB();
+    if (isar != null) {
+      await isar.writeTxn<void>(() async {
+        final book = await isar.books.get(id);
+        if (book != null) {
+          book.lastReadPosition = lastReadPosition;
+          await isar.books.put(book);
+        }
+      });
+    }
+  }
+
+  //update lastTranslateId
+  Future<void> updateLastTranslateId(int id, int lastTranslateId) async {
+    final isar = await initDB();
+    if (isar != null) {
+      await isar.writeTxn<void>(() async {
+        final book = await isar.books.get(id);
+        if (book != null) {
+          book.lastTranslateId = lastTranslateId;
+          await isar.books.put(book);
+        }
+      });
+    }
+  }
+
+  //update book
+  Future<void> updateBook(int id, Book book) async {
+    final isar = await initDB();
+    if (isar != null) {
+      await isar.writeTxn<void>(() async {
+        final bookExist = await isar.books.get(id);
+        if (bookExist != null) {
+          book.id = bookExist.id;
+          await isar.books.put(book);
+        }
+      });
+    }
+  }
+
+  //add chapter
+  Future<void> addChapter(int id, Chapter chapter) async {
+    final isar = await initDB();
+    if (isar != null) {
+      await isar.writeTxn<void>(() async {
+        final book = await isar.books.get(id);
+        if (book != null) {
+          book.chapters = [...book.chapters, chapter];
+          await isar.books.put(book);
+        }
+      });
+    }
+  }
+
+  //update chapter
+  Future<void> updateChapter(int bookId, Chapter chapter) async {
+    final isar = await initDB();
+    if (isar != null) {
+      await isar.writeTxn<void>(() async {
+        final book = await isar.books.get(bookId);
+        if (book != null) {
+          if (book.chapters.isNotEmpty) {
+            final index = book.chapters.indexWhere((element) =>
+                element.translateId == chapter.translateId &&
+                element.title == chapter.title);
+            if (index != -1) {
+              var tmp = book.chapters;
+              tmp[index] = chapter;
+              book.chapters = tmp;
+              await isar.books.put(book);
+            }
+          }
+        }
+      });
+    }
+  }
+
+  //delete book
+  Future<void> deleteBook(int id) async {
+    final isar = await initDB();
+    if (isar != null) {
+      await isar.writeTxn<void>(() async {
+        await isar.books.delete(id);
       });
     }
   }

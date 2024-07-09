@@ -10,15 +10,22 @@ class Book {
   String? filePath;
   String? originalFilePath;
   String? coverImage;
-  List<Chapter>? chapters;
+  List<Chapter> chapters = [];
   String? prePrompt;
+  String? lastReadPosition;
+  int? lastTranslateId;
 }
 
 @embedded
 class Chapter {
+  int order = 0;
+  int translateId = 0;
   String? title;
   String? originalContent;
+  String? translatedTitle;
   String? translatedContent;
   String? prePrompt;
+  String? fromLanguage;
+  String? toLanguage;
   int? statusTranslation;
 }

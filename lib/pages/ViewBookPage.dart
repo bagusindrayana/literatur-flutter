@@ -10,15 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:epubx/epubx.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:logger/logger.dart';
-import "package:universal_html/parsing.dart" as parsing;
-import 'package:path/path.dart' as p;
 import 'package:html/parser.dart';
-import 'package:image/image.dart' as images;
-import 'package:flutter/widgets.dart' as widgets;
-import 'package:flutter_html/flutter_html.dart' as fhtml;
-import 'package:html/dom.dart' as dom;
-import 'package:html/parser.dart' as htmlParser;
 import 'package:collection/collection.dart';
 
 class ViewBookPage extends StatefulWidget {
@@ -128,6 +120,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
                         ),
                         IconButton(
                             onPressed: () {
+                              Navigator.of(context).pop();
                               Navigator.pushNamed(context, '/translate-book',
                                   arguments: widget.book);
                             },
@@ -152,6 +145,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
                                 "${translate.fromLanguage} to ${translate.toLanguage}"),
                             trailing: IconButton(
                               onPressed: () async {
+                                Navigator.of(context).pop();
                                 Navigator.pushNamed(
                                     context, '/edit-translate-book',
                                     arguments: {
@@ -159,7 +153,6 @@ class _ViewBookPageState extends State<ViewBookPage> {
                                       "translate": translate,
                                     }).then((v) {
                                   getBookData();
-                                  Navigator.of(context).pop();
                                 });
                               },
                               icon: Icon(Icons.edit),
@@ -237,6 +230,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
           images: images,
           htmlFiles: htmlFiles,
           onPageChange: (int index) {
+            widget.book.lastReadPosition = index.toString();
             _bookRepository.updateLastReadPosition(
                 widget.book.id, index.toString());
           },
@@ -351,7 +345,7 @@ class _PagingTextState extends State<PagingText> {
       if (widget.translateId != 0) {
         Chapter? c = widget.book.chapters.firstWhereOrNull((element) =>
             element.translateId == widget.translateId &&
-            element.title == title);
+            key.contains(element.key!));
         if (c != null &&
             c.translatedContent != null &&
             parsedString.trim() != "") {
@@ -479,42 +473,64 @@ class _PagingTextState extends State<PagingText> {
               child: SizedBox.expand(
                 key: _pageKey,
                 child: (_pageTexts.length > 0)
-                    ? (_pageTexts[_currentIndex].image != null)
-                        ? SingleChildScrollView(
-                            child: Wrap(
-                              children: [
-                                Align(
-                                  alignment: Alignment.center,
-                                  child: Container(
-                                    constraints: BoxConstraints(
-                                      maxHeight:
-                                          MediaQuery.of(context).size.height -
+                    ? GestureDetector(
+                        onHorizontalDragEnd: (dragDetail) {
+                          if (dragDetail.primaryVelocity! < -5) {
+                            //next
+                            setState(() {
+                              if (_currentIndex < _pageTexts.length - 1)
+                                _currentIndex++;
+                              if (widget.onPageChange != null)
+                                widget.onPageChange!(_currentIndex);
+                            });
+                          } else if (dragDetail.primaryVelocity! > 5) {
+                            //prev
+                            setState(() {
+                              if (_currentIndex > 0) _currentIndex--;
+                              if (widget.onPageChange != null)
+                                widget.onPageChange!(_currentIndex);
+                            });
+                          }
+                        },
+                        child: (_pageTexts[_currentIndex].image != null)
+                            ? SingleChildScrollView(
+                                child: Wrap(
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.center,
+                                      child: Container(
+                                        constraints: BoxConstraints(
+                                          maxHeight: MediaQuery.of(context)
+                                                  .size
+                                                  .height -
                                               186,
-                                      //maximum height set to 100% of vertical height
+                                          //maximum height set to 100% of vertical height
 
-                                      maxWidth:
-                                          MediaQuery.of(context).size.width -
+                                          maxWidth: MediaQuery.of(context)
+                                                  .size
+                                                  .width -
                                               16,
-                                      //maximum width set to 100% of width
+                                          //maximum width set to 100% of width
+                                        ),
+                                        child: CachedMemoryImage(
+                                          fit: BoxFit.scaleDown,
+                                          uniqueKey:
+                                              "/${widget.book.id}/${_pageTexts[_currentIndex].title}/img/$_currentIndex",
+                                          errorWidget: const Text('Error'),
+                                          placeholder:
+                                              const CircularProgressIndicator(),
+                                          bytes: Uint8List.fromList(
+                                              _pageTexts[_currentIndex].image!),
+                                        ),
+                                      ),
                                     ),
-                                    child: CachedMemoryImage(
-                                      fit: BoxFit.scaleDown,
-                                      uniqueKey:
-                                          "/${widget.book.id}/${_pageTexts[_currentIndex].title}/img/$_currentIndex",
-                                      errorWidget: const Text('Error'),
-                                      placeholder:
-                                          const CircularProgressIndicator(),
-                                      bytes: Uint8List.fromList(
-                                          _pageTexts[_currentIndex].image!),
-                                    ),
-                                  ),
+                                    Text(_pageTexts[_currentIndex].content),
+                                  ],
                                 ),
-                                Text(_pageTexts[_currentIndex].content),
-                              ],
-                            ),
-                          )
-                        : SelectableText(_pageTexts[_currentIndex].content,
-                            style: widget.style)
+                              )
+                            : SelectableText(_pageTexts[_currentIndex].content,
+                                style: widget.style),
+                      )
                     : SizedBox(),
               ),
             ),

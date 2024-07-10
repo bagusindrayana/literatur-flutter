@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:Literatur/helpers/TranslateHelper.dart';
+import 'package:Literatur/helpers/UIHelper.dart';
 import 'package:Literatur/models/Book.dart';
 import 'package:Literatur/models/Translate.dart';
 import 'package:Literatur/repositories/BookRepository.dart';
@@ -100,7 +101,11 @@ class _EditTranslateBookPageState extends State<EditTranslateBookPage> {
       //loop
       String resultTranslation = "";
       bool berhasil = false;
+      bool stop = false;
       for (var i = 0; i < tokens.length / maxlength; i++) {
+        if (stop) {
+          break;
+        }
         //substring
         int start = i * maxlength;
         int end = ((i + 1) * maxlength);
@@ -120,11 +125,15 @@ class _EditTranslateBookPageState extends State<EditTranslateBookPage> {
             berhasil = true;
           } else {
             Logger().e("Null Response");
+            UIHelper.showSnackBar(context, "Null Response");
             berhasil = false;
+            stop = true;
           }
         }, (e) {
           Logger().e(e);
           berhasil = false;
+          stop = true;
+          UIHelper.showSnackBar(context, e.toString());
         });
         Random random = new Random();
         int randomMilisecond = random.nextInt(1000) + 1000;

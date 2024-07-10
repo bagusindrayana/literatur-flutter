@@ -20,6 +20,7 @@ class Book {
 class Chapter {
   int order = 0;
   int translateId = 0;
+  String? key;
   String? title;
   String? originalContent;
   String? translatedTitle;

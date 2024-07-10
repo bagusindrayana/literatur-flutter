@@ -54,6 +54,7 @@ dependencies:
   japanese_word_tokenizer: ^0.0.3
   simplytranslate: ^2.0.2
   jieba_flutter: ^0.1.1
+  uuid: ^4.4.0
 
 dev_dependencies:
   flutter_test:

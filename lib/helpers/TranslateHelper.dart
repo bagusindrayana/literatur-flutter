@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:Literatur/helpers/ReverseAI.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:translator/translator.dart';
 import 'package:simplytranslate/simplytranslate.dart';
@@ -8,10 +9,10 @@ import 'package:http/http.dart';
 class Translatehelper {
   static List<String> providers = [
     "Google",
-    "Yandex",
     "DeepL",
     "Gemini",
-    "Libre"
+    "Llama",
+    "GPT-3.5"
   ];
   static List<String> languages = [
     "Indonesian",
@@ -24,9 +25,9 @@ class Translatehelper {
       String from, String to, String prePrompt, String text) {
     // print("From : ${from} To : ${to}");
     if (to == "Indonesian") {
-      return "Terjemahkan teks ${from} berikut ke bahasa ${to} \n\n Teksnya adalah : \n```${text}``` \n\n, untuk informasi dan instruktsi tambahan : \n ${prePrompt}.\n (Jangan terjemahkan keterangan informasi dan instruksi tambahan, hanya terjemahkan teks yang ada dalam simbol ```) dan tolong hanya berikan response dan jawab hasil terjemahan saja.";
+      return "Terjemahkan teks ${from} berikut ke bahasa ${to} \n\n Teksnya adalah : \n`${text}`. \n\n, untuk informasi dan instruktsi tambahan terjemahan : \n ${prePrompt}.\n tolong hanya berikan response dan jawab hasil terjemahan saja dan jangan berikan response lainnya.";
     } else {
-      return "Translate the following ${from} texts  to ${to} language : \n\n The texts is : \n```${text}``` \n\n, for aditional information or instruction : \n ${prePrompt}.\n (Dont Translate information or instruction, only translate text inside ```) and please only response or answer with translation result only.";
+      return "Translate the following ${from} texts  to ${to} language : \n\n The texts is : \n`${text}`. \n\n, for aditional information or instruction translation : \n ${prePrompt}.\n please only response or answer with translation result only and never give any response else.";
     }
   }
 
@@ -42,10 +43,14 @@ class Translatehelper {
           value.content!.parts!.isNotEmpty) {
         successCallback(value.content!.parts!.lastOrNull?.text);
       } else {
-        print(value);
-        throw Exception("No translation found");
+        if (value != null) {
+          throw Exception("Cant translate this text : ${value!.toJson()}");
+        } else {
+          throw Exception("Cant translate this text : Uknown");
+        }
       }
     } catch (e) {
+      print(e);
       errorCallback(e);
     }
   }
@@ -179,6 +184,12 @@ class Translatehelper {
     } else if (provider == "DeepL") {
       await translateDeepL(
           text, from, to, prePrompt, successCallback, errorCallback);
+    } else if (provider == "Llama") {
+      var prompt = promptBuilder(from, to, prePrompt, text);
+      await ReverseAI.translateLlama(prompt, successCallback, errorCallback);
+    } else if (provider == "GPT-3.5") {
+      var prompt = promptBuilder(from, to, prePrompt, text);
+      await ReverseAI.translateGpt3(prompt, successCallback, errorCallback);
     } else {
       errorCallback("Provider not found");
     }

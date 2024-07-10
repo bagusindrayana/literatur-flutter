@@ -23,6 +23,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      themeMode: ThemeMode.system,
       onGenerateRoute: (settings) {
         print(settings.name);
         if (settings.name == "/view") {

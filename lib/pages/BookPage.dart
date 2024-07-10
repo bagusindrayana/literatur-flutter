@@ -1,3 +1,4 @@
+import 'package:Literatur/helpers/UIHelper.dart';
 import 'package:Literatur/repositories/TranslateRepository.dart';
 import 'package:flutter/material.dart';
 import 'package:Literatur/models/Book.dart';
@@ -28,6 +29,7 @@ class _HomePageState extends State<HomePage> {
   List<Book> books = [];
   List<Book> multiSelectBooks = [];
   bool multiSelectMode = false;
+  bool showLoading = false;
 
   void selectBook(Book book) {
     if (multiSelectBooks.contains(book)) {
@@ -59,10 +61,10 @@ class _HomePageState extends State<HomePage> {
         .deleteBooks(multiSelectBooks.map((e) => e.id).toList());
     multiSelectBooks.clear();
     multiSelectMode = false;
-    _loadData();
+    await _loadData();
   }
 
-  void _loadData() async {
+  Future<void> _loadData() async {
     setState(() {
       loadDataStatus = StatusProcessBook.loading;
     });
@@ -73,87 +75,91 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _addBook() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['epub'],
-    );
+    setState(() {
+      showLoading = true;
+    });
 
-    if (result != null) {
-      PlatformFile file = result.files.first;
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['epub'],
+      );
 
-      List<int>? bytes;
-      if (file.bytes != null) {
-        bytes = file.bytes!;
-      } else {
-        String fullPath = file.path!;
-        var targetFile = File(fullPath);
-        bytes = await targetFile.readAsBytes();
-      }
+      if (result != null) {
+        PlatformFile file = result.files.first;
 
-      if (bytes != null) {
-        try {
-          EpubBook epubBook = await EpubReader.readBook(bytes);
+        List<int>? bytes;
+        if (file.bytes != null) {
+          bytes = file.bytes!;
+        } else {
+          String fullPath = file.path!;
+          var targetFile = File(fullPath);
+          bytes = await targetFile.readAsBytes();
+        }
 
-          images.Image? coverImage = epubBook.CoverImage;
-          if (coverImage == null) {
-            EpubContent bookContent = epubBook.Content!;
-            Map<String, EpubByteContentFile> _images = bookContent.Images!;
-            if (_images.isNotEmpty) {
-              EpubByteContentFile image = _images.values.first;
-              coverImage = images.decodeImage(image.Content!);
+        if (bytes != null) {
+          try {
+            EpubBook epubBook = await EpubReader.readBook(bytes);
+
+            images.Image? coverImage = epubBook.CoverImage;
+            if (coverImage == null) {
+              EpubContent bookContent = epubBook.Content!;
+              Map<String, EpubByteContentFile> _images = bookContent.Images!;
+              if (_images.isNotEmpty) {
+                EpubByteContentFile image = _images.values.first;
+                coverImage = images.decodeImage(image.Content!);
+              }
             }
-          }
-          final timeString = DateTime.now().millisecondsSinceEpoch.toString();
-          final directory = await getApplicationDocumentsDirectory();
-          //copy file to storage
-          String saveDir = directory.path + '/books';
-          String savePath = '$saveDir/${timeString}_${file.name}';
-          File targetFile = File(savePath);
-          if (targetFile.existsSync()) {
-            targetFile.deleteSync();
-          }
-
-          targetFile.createSync(recursive: true);
-          targetFile.writeAsBytesSync(bytes);
-
-          //save image
-          if (coverImage != null) {
-            String coverImagePath = '$saveDir/${timeString}_${file.name}.jpg';
-            File coverImageFile = File(coverImagePath);
-            if (coverImageFile.existsSync()) {
-              coverImageFile.deleteSync();
+            final timeString = DateTime.now().millisecondsSinceEpoch.toString();
+            final directory = await getApplicationDocumentsDirectory();
+            //copy file to storage
+            String saveDir = directory.path + '/books';
+            String savePath = '$saveDir/${timeString}_${file.name}';
+            File targetFile = File(savePath);
+            if (await targetFile.exists()) {
+              await targetFile.delete();
             }
 
-            coverImageFile.createSync(recursive: true);
-            coverImageFile.writeAsBytesSync(images.encodeJpg(coverImage));
+            await targetFile.create(recursive: true);
+            await targetFile.writeAsBytes(bytes);
+
+            //save image
+            if (coverImage != null) {
+              String coverImagePath = '$saveDir/${timeString}_${file.name}.jpg';
+              File coverImageFile = File(coverImagePath);
+              if (await coverImageFile.exists()) {
+                await coverImageFile.delete();
+              }
+
+              await coverImageFile.create(recursive: true);
+              await coverImageFile.writeAsBytes(images.encodeJpg(coverImage));
+            }
+
+            Book newBook = Book();
+            newBook.title = file.name.replaceAll(file.extension.toString(), "");
+            newBook.filePath = savePath;
+            newBook.originalFilePath = file.path;
+            newBook.chapters = [];
+            if (coverImage != null) {
+              newBook.coverImage = '$saveDir/${timeString}_${file.name}.jpg';
+            }
+
+            await _bookRepository.addBook(newBook, file.path);
+            await _loadData();
+          } catch (e) {
+            Logger().e(e);
+            UIHelper.showSnackBar(context, "Failed to parse file");
           }
-
-          Book newBook = Book();
-          newBook.title = file.name.replaceAll(file.extension.toString(), "");
-          newBook.filePath = savePath;
-          newBook.originalFilePath = file.path;
-          newBook.chapters = [];
-          if (coverImage != null) {
-            newBook.coverImage = '$saveDir/${timeString}_${file.name}.jpg';
-          }
-
-          await _bookRepository.addBook(newBook, file.path);
-          _loadData();
-        } catch (e) {
-          Logger().e(e);
-          //show snackback error
-          var snackBar = SnackBar(
-            content: Text('${e}'),
-          );
-
-          // Find the ScaffoldMessenger in the widget tree
-          // and use it to show a SnackBar.
-          ScaffoldMessenger.of(context).showSnackBar(snackBar);
         }
       }
-    } else {
-      // User canceled the picker
+    } catch (e) {
+      Logger().e(e);
+      UIHelper.showSnackBar(context, "Failed to open file");
     }
+
+    setState(() {
+      showLoading = false;
+    });
   }
 
   @override
@@ -221,59 +227,68 @@ class _HomePageState extends State<HomePage> {
             )
           else
             Expanded(
-              child: RefreshIndicator(
-                  onRefresh: () async {
-                    return _loadData();
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                        top: 8.0, left: 8.0, right: 8.0, bottom: 0),
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 8.0,
-                        mainAxisSpacing: 8.0,
-                      ),
-                      itemCount: books.length,
-                      itemBuilder: (context, index) {
-                        return BookCard(
-                          title: "${books[index].title}",
-                          thumbnail: books[index].coverImage != null
-                              ? widgets.Image.file(
-                                  File("${books[index].coverImage}"),
-                                  fit: BoxFit.fitWidth)
-                              : null,
-                          selectMode: multiSelectMode,
-                          isSelected: multiSelectBooks.contains(books[index]),
-                          onSelect: (isSelected) {
-                            if (isSelected) {
-                              multiSelectBooks.add(books[index]);
-                            } else {
-                              multiSelectBooks.remove(books[index]);
-                            }
-                            setState(() {});
-                          },
-                          onLongPress: () {
-                            if (!multiSelectMode) {
-                              multiSelectMode = true;
-                              multiSelectBooks.add(books[index]);
-                              setState(() {});
-                            }
-                          },
-                          onTap: () {
-                            if (!multiSelectMode) {
-                              Navigator.pushNamed(context, '/view',
-                                      arguments: books[index])
-                                  .then((v) {
-                                _loadData();
-                              });
-                            }
-                          },
-                        );
-                      },
+              child: Stack(
+                children: [
+                  if (showLoading)
+                    Center(
+                      child: CircularProgressIndicator(),
                     ),
-                  )),
+                  RefreshIndicator(
+                      onRefresh: () async {
+                        return _loadData();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                            top: 8.0, left: 8.0, right: 8.0, bottom: 0),
+                        child: GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
+                          ),
+                          itemCount: books.length,
+                          itemBuilder: (context, index) {
+                            return BookCard(
+                              title: "${books[index].title}",
+                              thumbnail: books[index].coverImage != null
+                                  ? widgets.Image.file(
+                                      File("${books[index].coverImage}"),
+                                      fit: BoxFit.fitWidth)
+                                  : null,
+                              selectMode: multiSelectMode,
+                              isSelected:
+                                  multiSelectBooks.contains(books[index]),
+                              onSelect: (isSelected) {
+                                if (isSelected) {
+                                  multiSelectBooks.add(books[index]);
+                                } else {
+                                  multiSelectBooks.remove(books[index]);
+                                }
+                                setState(() {});
+                              },
+                              onLongPress: () {
+                                if (!multiSelectMode) {
+                                  multiSelectMode = true;
+                                  multiSelectBooks.add(books[index]);
+                                  setState(() {});
+                                }
+                              },
+                              onTap: () {
+                                if (!multiSelectMode) {
+                                  Navigator.pushNamed(context, '/view',
+                                          arguments: books[index])
+                                      .then((v) {
+                                    _loadData();
+                                  });
+                                }
+                              },
+                            );
+                          },
+                        ),
+                      ))
+                ],
+              ),
             ),
         ],
       ),

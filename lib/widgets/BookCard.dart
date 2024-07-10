@@ -36,8 +36,13 @@ class _BookCardState extends State<BookCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.all(0),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: isSelected ? Colors.blue : Colors.transparent,
+          width: 2,
+        ),
+      ),
       child: InkWell(
         onLongPress: () {
           if (widget.selectMode != null && widget.selectMode! == false) {
@@ -48,43 +53,43 @@ class _BookCardState extends State<BookCard> {
           }
         },
         onTap: widget.onTap as void Function()?,
-        child: Stack(children: [
-          Align(
-            alignment: Alignment.center,
-            child: Column(
-              children: [
-                Expanded(
-                    child: widget.thumbnail != null
-                        ? AspectRatio(
-                            aspectRatio: 1,
-                            child: widget.thumbnail!,
-                          )
-                        : Container()),
-                Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Text(widget.title),
+        child: Column(
+          children: [
+            Container(
+              height: 170,
+              color: Colors.grey,
+              child: Stack(children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: widget.thumbnail != null
+                      ? AspectRatio(
+                          aspectRatio: 1,
+                          child: widget.thumbnail!,
+                        )
+                      : Container(),
                 ),
-              ],
+                //checkbox
+                if (widget.selectMode != null && widget.selectMode!)
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: GestureDetector(
+                        child: Icon(isSelected
+                            ? Icons.check_box
+                            : Icons.check_box_outline_blank),
+                        onTap: () {
+                          setState(() {
+                            isSelected = !isSelected;
+                          });
+                          if (widget.onSelect != null) {
+                            widget.onSelect!(isSelected);
+                          }
+                        }),
+                  ),
+              ]),
             ),
-          ),
-          //checkbox
-          if (widget.selectMode != null && widget.selectMode!)
-            Align(
-              alignment: Alignment.topRight,
-              child: GestureDetector(
-                  child: Icon(isSelected
-                      ? Icons.check_box
-                      : Icons.check_box_outline_blank),
-                  onTap: () {
-                    setState(() {
-                      isSelected = !isSelected;
-                    });
-                    if (widget.onSelect != null) {
-                      widget.onSelect!(isSelected);
-                    }
-                  }),
-            ),
-        ]),
+            Text(widget.title),
+          ],
+        ),
       ),
     );
   }

@@ -2,18 +2,19 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:Literatur/helpers/TranslateHelper.dart';
+import 'package:Literatur/helpers/UIHelper.dart';
 import 'package:Literatur/models/Book.dart';
 import 'package:Literatur/models/Translate.dart';
 import 'package:Literatur/repositories/BookRepository.dart';
 import 'package:Literatur/repositories/TranslateRepository.dart';
 import 'package:flutter/material.dart';
 import 'package:epubx/epubx.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:html/parser.dart';
 import 'package:logger/logger.dart';
 import 'package:japanese_word_tokenizer/japanese_word_tokenizer.dart'
     as jw_tokenizer;
-import 'package:translator/translator.dart';
+import 'package:collection/collection.dart';
+import 'package:path/path.dart' as path;
 
 enum TranslateStatus { loading, finish, error, none }
 
@@ -55,19 +56,52 @@ class _TranslateBookPageState extends State<TranslateBookPage> {
     return _chapters;
   }
 
-  Future<List<EpubChapter>> getChapter() async {
+  Future<List<Chapter>> getChapterContent() async {
     var targetFile = File(widget.book.filePath!);
     var bytes = await targetFile.readAsBytes();
     EpubBook epubBook = await EpubReader.readBook(bytes);
+    EpubContent bookContent = epubBook.Content!;
 
     List<EpubChapter> _chapters = [];
     for (var _chapter in epubBook.Chapters!) {
       _chapters.addAll(await subChapter(_chapter));
     }
 
-    print(chapters.length);
+    var htmlFiles = bookContent.Html!;
+    List<Chapter> contents = [];
 
-    return _chapters;
+    String title = "";
+    htmlFiles.forEach((key, value) {
+      if (key.contains('nav')) {
+        return;
+      }
+      for (var _chapter in _chapters) {
+        if (_chapter.ContentFileName != null &&
+            key.contains(_chapter.ContentFileName!)) {
+          title = _chapter.Title!;
+        }
+      }
+      if (title != "") {
+        final document = parse(value.Content!);
+        String parsedString = parse(document.body!.text).documentElement!.text;
+        if (parsedString.trim() != "") {
+          Chapter newChapter = Chapter();
+          File file = new File(key);
+          String basename = path.basename(file.path);
+          newChapter.key = basename;
+          newChapter.title = title.trim();
+          newChapter.originalContent = parsedString;
+          contents.add(newChapter);
+        }
+        // if (contents[title.trim()] != null) {
+        //   contents[title.trim()] = contents[title.trim()]! + parsedString;
+        // } else {
+        //   contents[title.trim()] = parsedString;
+        // }
+      }
+    });
+
+    return contents;
   }
 
   void addTranslate() async {
@@ -78,44 +112,26 @@ class _TranslateBookPageState extends State<TranslateBookPage> {
     newTranslate.toLanguage = toLanguage;
     await _translateRepository.addTranslate(newTranslate);
 
-    var originalChapters = await getChapter();
+    var originalChapters = await getChapterContent();
     var texts = "";
     int order = 0;
-    for (var chapter in originalChapters) {
-      final document = parse(chapter.HtmlContent);
-      final String parsedString =
-          parse(document.body!.text).documentElement!.text.trim();
 
-      if (parsedString != "") {
-        texts += "${chapter.Title!.trim()} \n";
-        final index = book.chapters.indexWhere((element) =>
-            element.translateId == newTranslate.id &&
-            element.title == chapter.Title);
-        if (index != -1) {
-          Chapter updateChapter = book.chapters[index];
-          updateChapter.order = order;
-          updateChapter.prePrompt = _prePromptController.text;
-          updateChapter.statusTranslation = 0;
-          updateChapter.fromLanguage = fromLanguage;
-          // updateChapter.statusTranslation = 0;
-          updateChapter.toLanguage = toLanguage;
-          _bookRepository.updateChapter(book.id, updateChapter);
-        } else {
-          Chapter newChapter = Chapter();
-          newChapter.order = order;
-          newChapter.translateId = newTranslate.id;
-          newChapter.title = chapter.Title;
-          newChapter.originalContent = parsedString;
-          newChapter.prePrompt = _prePromptController.text;
-          newChapter.statusTranslation = 0;
-          newChapter.fromLanguage = fromLanguage;
-          newChapter.toLanguage = toLanguage;
-          book.chapters = [...book.chapters, newChapter];
-          _bookRepository.addChapter(book.id, newChapter);
-        }
+    originalChapters.forEach((Chapter c) {
+      if (c.originalContent!.trim() != "") {
+        texts += "${c.title!.trim()} \n";
+        Chapter newChapter = c;
+        newChapter.order = order;
+        newChapter.translateId = newTranslate.id;
+        newChapter.prePrompt = _prePromptController.text;
+        newChapter.statusTranslation = 0;
+        newChapter.fromLanguage = fromLanguage;
+        newChapter.toLanguage = toLanguage;
+        book.chapters = [...book.chapters, newChapter];
+        _bookRepository.addChapter(book.id, newChapter);
       }
       order++;
-    }
+    });
+
     getTranslateChapters();
     if (texts == "") {
       _translateStatus = TranslateStatus.error;
@@ -130,19 +146,24 @@ class _TranslateBookPageState extends State<TranslateBookPage> {
   }
 
   void translateTitle(String texts) async {
-    int total = chapters.length;
     await Translatehelper.translate(provider, texts, newTranslate.fromLanguage!,
         newTranslate.toLanguage!, "", (String? value) {
+      var arr = texts.trim().split("\n");
       if (value != null) {
-        var arr = value.trim().split("\n");
-        if (arr.length == total) {
-          for (var i = 0; i < total; i++) {
-            var chapter = chapters[i];
-            chapter.translatedTitle = arr[i];
-            _bookRepository.updateChapter(book.id, chapter);
-          }
-        } else {
-          Logger().i(texts);
+        var arrTranslate = value.trim().split("\n");
+
+        for (var i = 0; i < arr.length; i++) {
+          var findChapters = chapters.where((element) =>
+              element.translateId == newTranslate.id &&
+              element.title == arr[i].trim());
+          findChapters.forEach((findChapter) {
+            if (i < arrTranslate.length) {
+              findChapter.translatedTitle = arrTranslate[i];
+              _bookRepository.updateChapter(book.id, findChapter);
+            } else {
+              Logger().i("${arr[i].trim()}");
+            }
+          });
         }
       }
       setState(() {});
@@ -202,7 +223,11 @@ class _TranslateBookPageState extends State<TranslateBookPage> {
         //loop
         String resultTranslation = "";
         bool berhasil = false;
+        bool stop = false;
         for (var i = 0; i < tokens.length / maxlength; i++) {
+          if (stop) {
+            break;
+          }
           //substring
           int start = i * maxlength;
           int end = ((i + 1) * maxlength);
@@ -222,11 +247,15 @@ class _TranslateBookPageState extends State<TranslateBookPage> {
               berhasil = true;
             } else {
               Logger().e("Null Response");
+              UIHelper.showSnackBar(context, "Null Response");
               berhasil = false;
+              stop = true;
             }
           }, (e) {
             Logger().e(e);
+            UIHelper.showSnackBar(context, e.toString());
             berhasil = false;
+            stop = true;
           });
           Random random = new Random();
           int randomMilisecond = random.nextInt(1000) + 1000;

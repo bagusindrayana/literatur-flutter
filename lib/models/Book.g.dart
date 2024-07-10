@@ -1692,48 +1692,53 @@ const ChapterSchema = Schema(
       name: r'fromLanguage',
       type: IsarType.string,
     ),
-    r'order': PropertySchema(
+    r'key': PropertySchema(
       id: 1,
+      name: r'key',
+      type: IsarType.string,
+    ),
+    r'order': PropertySchema(
+      id: 2,
       name: r'order',
       type: IsarType.long,
     ),
     r'originalContent': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'originalContent',
       type: IsarType.string,
     ),
     r'prePrompt': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'prePrompt',
       type: IsarType.string,
     ),
     r'statusTranslation': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'statusTranslation',
       type: IsarType.long,
     ),
     r'title': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'title',
       type: IsarType.string,
     ),
     r'toLanguage': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'toLanguage',
       type: IsarType.string,
     ),
     r'translateId': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'translateId',
       type: IsarType.long,
     ),
     r'translatedContent': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'translatedContent',
       type: IsarType.string,
     ),
     r'translatedTitle': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'translatedTitle',
       type: IsarType.string,
     )
@@ -1752,6 +1757,12 @@ int _chapterEstimateSize(
   var bytesCount = offsets.last;
   {
     final value = object.fromLanguage;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.key;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
@@ -1802,15 +1813,16 @@ void _chapterSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.fromLanguage);
-  writer.writeLong(offsets[1], object.order);
-  writer.writeString(offsets[2], object.originalContent);
-  writer.writeString(offsets[3], object.prePrompt);
-  writer.writeLong(offsets[4], object.statusTranslation);
-  writer.writeString(offsets[5], object.title);
-  writer.writeString(offsets[6], object.toLanguage);
-  writer.writeLong(offsets[7], object.translateId);
-  writer.writeString(offsets[8], object.translatedContent);
-  writer.writeString(offsets[9], object.translatedTitle);
+  writer.writeString(offsets[1], object.key);
+  writer.writeLong(offsets[2], object.order);
+  writer.writeString(offsets[3], object.originalContent);
+  writer.writeString(offsets[4], object.prePrompt);
+  writer.writeLong(offsets[5], object.statusTranslation);
+  writer.writeString(offsets[6], object.title);
+  writer.writeString(offsets[7], object.toLanguage);
+  writer.writeLong(offsets[8], object.translateId);
+  writer.writeString(offsets[9], object.translatedContent);
+  writer.writeString(offsets[10], object.translatedTitle);
 }
 
 Chapter _chapterDeserialize(
@@ -1821,15 +1833,16 @@ Chapter _chapterDeserialize(
 ) {
   final object = Chapter();
   object.fromLanguage = reader.readStringOrNull(offsets[0]);
-  object.order = reader.readLong(offsets[1]);
-  object.originalContent = reader.readStringOrNull(offsets[2]);
-  object.prePrompt = reader.readStringOrNull(offsets[3]);
-  object.statusTranslation = reader.readLongOrNull(offsets[4]);
-  object.title = reader.readStringOrNull(offsets[5]);
-  object.toLanguage = reader.readStringOrNull(offsets[6]);
-  object.translateId = reader.readLong(offsets[7]);
-  object.translatedContent = reader.readStringOrNull(offsets[8]);
-  object.translatedTitle = reader.readStringOrNull(offsets[9]);
+  object.key = reader.readStringOrNull(offsets[1]);
+  object.order = reader.readLong(offsets[2]);
+  object.originalContent = reader.readStringOrNull(offsets[3]);
+  object.prePrompt = reader.readStringOrNull(offsets[4]);
+  object.statusTranslation = reader.readLongOrNull(offsets[5]);
+  object.title = reader.readStringOrNull(offsets[6]);
+  object.toLanguage = reader.readStringOrNull(offsets[7]);
+  object.translateId = reader.readLong(offsets[8]);
+  object.translatedContent = reader.readStringOrNull(offsets[9]);
+  object.translatedTitle = reader.readStringOrNull(offsets[10]);
   return object;
 }
 
@@ -1843,22 +1856,24 @@ P _chapterDeserializeProp<P>(
     case 0:
       return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
-    case 2:
       return (reader.readStringOrNull(offset)) as P;
+    case 2:
+      return (reader.readLong(offset)) as P;
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readLongOrNull(offset)) as P;
-    case 5:
       return (reader.readStringOrNull(offset)) as P;
+    case 5:
+      return (reader.readLongOrNull(offset)) as P;
     case 6:
       return (reader.readStringOrNull(offset)) as P;
     case 7:
-      return (reader.readLong(offset)) as P;
-    case 8:
       return (reader.readStringOrNull(offset)) as P;
+    case 8:
+      return (reader.readLong(offset)) as P;
     case 9:
+      return (reader.readStringOrNull(offset)) as P;
+    case 10:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2010,6 +2025,152 @@ extension ChapterQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'fromLanguage',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Chapter, Chapter, QAfterFilterCondition> keyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'key',
+      ));
+    });
+  }
+
+  QueryBuilder<Chapter, Chapter, QAfterFilterCondition> keyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'key',
+      ));
+    });
+  }
+
+  QueryBuilder<Chapter, Chapter, QAfterFilterCondition> keyEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'key',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chapter, Chapter, QAfterFilterCondition> keyGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'key',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chapter, Chapter, QAfterFilterCondition> keyLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'key',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chapter, Chapter, QAfterFilterCondition> keyBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'key',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chapter, Chapter, QAfterFilterCondition> keyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'key',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chapter, Chapter, QAfterFilterCondition> keyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'key',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chapter, Chapter, QAfterFilterCondition> keyContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'key',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chapter, Chapter, QAfterFilterCondition> keyMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'key',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chapter, Chapter, QAfterFilterCondition> keyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'key',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Chapter, Chapter, QAfterFilterCondition> keyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'key',
         value: '',
       ));
     });

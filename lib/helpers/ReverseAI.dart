@@ -27,7 +27,13 @@ class ReverseAI {
       successCallback(value);
     } catch (e) {
       print(e);
-      errorCallback(e);
+      try {
+        var value = await binjieGpt3(text);
+        successCallback(value);
+      } catch (e) {
+        print(e);
+        errorCallback(e);
+      }
     }
   }
 
@@ -180,6 +186,50 @@ class ReverseAI {
     }
 
     if (value.trim().isEmpty) {
+      throw Exception("Empty response");
+    }
+
+    return value;
+  }
+
+  static Future<String> binjieGpt3(String text) async {
+    var headers = {
+      'authority': 'api.binjie.fun',
+      'accept': 'application/json, text/plain, */*',
+      'accept-language': 'en-GB,en;q=0.9,en-US;q=0.8,id;q=0.7',
+      'content-type': 'application/json',
+      'origin': 'https://chat10.aichatos.xyz',
+      'referer': 'https://chat10.aichatos.xyz/',
+      'sec-ch-ua':
+          '"Not A(Brand";v="99", "Microsoft Edge";v="121", "Chromium";v="121"',
+      'sec-ch-ua-mobile': '?0',
+      'sec-ch-ua-platform': '"Windows"',
+      'sec-fetch-dest': 'empty',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-site': 'cross-site',
+      'user-agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0',
+      // 'Cookie': 'acw_tc=a3b51a9a17207103292283138ec1a21c1ecf1f9749fc55ee84e8695bb0; cdn_sec_tc=a3b51a9a17207103292283138ec1a21c1ecf1f9749fc55ee84e8695bb0'
+    };
+    //generate 12 random int
+    var id = randomString(12);
+    var request = http.Request(
+        'POST', Uri.parse('https://api.binjie.fun/api/generateStream'));
+    request.body = json.encode({
+      "prompt": text,
+      "userId": "#/chat/$id",
+      "network": true,
+      "system": "",
+      "withoutContext": false,
+      "stream": false
+    });
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+    var value = await response.stream.bytesToString();
+
+    if (value.trim().isEmpty) {
+      Logger().d(value);
       throw Exception("Empty response");
     }
 

@@ -229,7 +229,6 @@ class _ViewBookPageState extends State<ViewBookPage> {
           widget.book,
           chapters,
           style: const TextStyle(
-            color: Colors.black,
             fontSize: 16,
           ),
           images: images,
@@ -270,7 +269,6 @@ class PagingText extends StatefulWidget {
 
   PagingText(this.book, this.chapters,
       {this.style = const TextStyle(
-        color: Colors.black,
         fontSize: 16,
       ),
       this.images,

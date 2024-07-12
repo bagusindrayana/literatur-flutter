@@ -2,7 +2,6 @@
 on:
   # 2
   push:
-    branches: [ "main" ]
     tags:
     - '*'
 

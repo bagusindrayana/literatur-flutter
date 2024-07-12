@@ -55,6 +55,8 @@ dependencies:
   simplytranslate: ^2.0.2
   jieba_flutter: ^0.1.1
   uuid: ^4.4.0
+  wakelock_plus: ^1.2.5
+  adaptive_theme: ^3.6.0
 
 dev_dependencies:
   flutter_test:

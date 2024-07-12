@@ -13,17 +13,41 @@ import 'package:epubx/epubx.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:logger/logger.dart';
 import 'package:Literatur/pages/BookPage.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 
-void main() {
+
+void main() async {
   Gemini.init(apiKey: 'AIzaSyCijsbFwjSHKQpsNakJZWdlX6vNSS3DBfY');
-  runApp(MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  final savedThemeMode = await AdaptiveTheme.getThemeMode();
+  runApp(MyApp(savedThemeMode: savedThemeMode));
 }
 
 class MyApp extends StatelessWidget {
+  final AdaptiveThemeMode? savedThemeMode;
+
+  const MyApp({super.key, this.savedThemeMode});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return AdaptiveTheme(
+      light: ThemeData(
+        useMaterial3: true,
+        colorScheme: const ColorScheme.light(
+      
+          primaryContainer: Colors.white,
+        ),
+      ),
+      dark: ThemeData(
+        useMaterial3: true,
+        colorScheme: const ColorScheme.dark(
+          primaryContainer: Color.fromARGB(255, 66, 64, 64),
+        ),
+      ),
+      initial: savedThemeMode ?? AdaptiveThemeMode.light,
+      builder: (theme, darkTheme) => MaterialApp(
       themeMode: ThemeMode.system,
+      theme: theme,
+      darkTheme: darkTheme,
       onGenerateRoute: (settings) {
         print(settings.name);
         if (settings.name == "/view") {
@@ -59,6 +83,7 @@ class MyApp extends StatelessWidget {
         return null;
       },
       routes: {'/': (context) => const HomePage()},
+    ),
     );
   }
 }

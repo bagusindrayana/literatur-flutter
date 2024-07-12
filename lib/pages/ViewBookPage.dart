@@ -12,6 +12,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:html/parser.dart';
 import 'package:collection/collection.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 
 class ViewBookPage extends StatefulWidget {
   final Book book;
@@ -200,6 +202,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
     // TODO: implement initState
     super.initState();
     Future.delayed(Duration.zero, () {
+      WakelockPlus.enable();
       getBookData();
     });
   }
@@ -210,7 +213,9 @@ class _ViewBookPageState extends State<ViewBookPage> {
       appBar: AppBar(
         title: Text("${widget.book.title}"),
         actions: [
-          // IconButton(onPressed: () {}, icon: Icon(Icons.bookmark_border)),
+          IconButton(onPressed: () {
+            AdaptiveTheme.of(context).toggleThemeMode();
+          }, icon: AdaptiveTheme.of(context).mode.isDark ? Icon(Icons.light_mode):Icon(Icons.dark_mode)),
           IconButton(
               onPressed: () {
                 openTransalteMenu();
@@ -535,7 +540,7 @@ class _PagingTextState extends State<PagingText> {
               ),
             ),
             Container(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.primaryContainer,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

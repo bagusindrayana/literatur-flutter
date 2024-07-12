@@ -12,6 +12,8 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as images;
 import 'package:flutter/widgets.dart' as widgets;
+import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -172,7 +174,10 @@ class _HomePageState extends State<HomePage> {
     // }).catchError((e) {
     //   Logger().e(e);
     // });
-    _loadData();
+    Future.delayed(Duration.zero, () {
+      WakelockPlus.disable();
+      _loadData();
+    });
   }
 
   @override
@@ -181,6 +186,15 @@ class _HomePageState extends State<HomePage> {
       appBar: (!multiSelectMode)
           ? AppBar(
               title: Text("Literatur"),
+              actions: [
+                IconButton(
+                    onPressed: () {
+                      AdaptiveTheme.of(context).toggleThemeMode();
+                    },
+                    icon: AdaptiveTheme.of(context).mode.isDark
+                        ? Icon(Icons.light_mode)
+                        : Icon(Icons.dark_mode)),
+              ],
             )
           : AppBar(
               leading: IconButton(

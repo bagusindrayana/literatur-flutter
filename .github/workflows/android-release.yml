@@ -18,26 +18,6 @@ jobs:
 
     # 7
     steps:
-      # 1
-on:
-  # 2
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-  # 3
-  workflow_dispatch:
-
-# 4
-jobs:
-  # 5
-  build:
-    # 6
-    runs-on: ubuntu-latest
-
-    # 7
-    steps:
     - name: Clone repository
       uses: actions/checkout@v4
     - name: Set up Flutter
@@ -45,5 +25,4 @@ jobs:
       with:
         flutter-version: 3.19.0
     - run: flutter pub get
-    - name: Build APK
-      run: flutter build apk --release
+    - run: flutter build apk --release

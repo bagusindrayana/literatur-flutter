@@ -3,11 +3,8 @@ on:
   # 2
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-  # 3
-  workflow_dispatch:
+    tags:
+    - '*'
 
 # 4
 jobs:

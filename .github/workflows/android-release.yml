@@ -25,5 +25,8 @@ jobs:
       with:
         channel: stable
         flutter-version-file: pubspec.yaml
+        sdk: ">=3.4.3 <4.0.0"
+        flutter: 3.19.0
+    - run: flutter --version
     - run: flutter pub get
     - run: flutter build apk --release

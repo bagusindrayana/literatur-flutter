@@ -158,6 +158,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
             element.key == c.key &&
             element.translateId == widget.translate.id &&
             element.title == c.title);
+
         if (findChapter != null) {
           if (selected[chapters.indexOf(findChapter)]) {
             findChapter.order = order;
@@ -251,6 +252,9 @@ class _ChapterContentListState extends State<ChapterContentList> {
     // });
 
     var originalChapters = await getChapterContent();
+    var bookChapters = widget.book.chapters;
+    print("Original Book Chapters : ${bookChapters.length}");
+    selected = List.generate(originalChapters.length, (index) => true);
 
     int order = 0;
 
@@ -259,12 +263,13 @@ class _ChapterContentListState extends State<ChapterContentList> {
     originalChapters.forEach((Chapter c) {
       if (c.originalContent!.trim() != "") {
         //find chapter by key
-        var findChapter = chapters.firstWhereOrNull((element) =>
+        var findChapter = bookChapters.firstWhereOrNull((element) =>
             element.key == c.key &&
             element.translateId == widget.translate.id &&
             element.title == c.title);
         if (findChapter != null) {
-          if (selected[chapters.indexOf(findChapter)]) {
+          var findIndex = bookChapters.indexOf(findChapter);
+          if (findIndex >= 0 && selected[findIndex]) {
             findChapter.order = order;
             findChapter.statusTranslation = -1;
           }
@@ -286,8 +291,8 @@ class _ChapterContentListState extends State<ChapterContentList> {
 
     setState(() {
       chapters = newChapters;
-      selected = List.generate(chapters.length, (index) => true);
-      widget.book.chapters = chapters;
+
+      //widget.book.chapters = chapters;
     });
   }
 
@@ -349,9 +354,10 @@ class _ChapterContentListState extends State<ChapterContentList> {
           await Translatehelper.translate(
               widget.provider!,
               contents,
-              chapter.fromLanguage!,
-              chapter.toLanguage!,
-              chapter.prePrompt!, (String? value) {
+              chapter.fromLanguage ?? widget.translate.fromLanguage!,
+              chapter.toLanguage ?? widget.translate.toLanguage!,
+              chapter.prePrompt ?? widget.translate.prePrompt ?? "-",
+              (String? value) {
             if (value != null) {
               resultTranslation += value;
               berhasil = true;
@@ -400,15 +406,17 @@ class _ChapterContentListState extends State<ChapterContentList> {
       await Translatehelper.translate(
           widget.provider!,
           chapter.originalContent!,
-          chapter.fromLanguage!,
-          chapter.toLanguage!,
-          chapter.prePrompt!, (String? value) {
+          chapter.fromLanguage ?? widget.translate.fromLanguage!,
+          chapter.toLanguage ?? widget.translate.toLanguage!,
+          chapter.prePrompt ?? widget.translate.prePrompt ?? "-",
+          (String? value) {
         String resultTranslation = "";
         if (value != null) {
           resultTranslation = value;
           chapter.translatedContent = resultTranslation;
           chapter.statusTranslation = 1;
           _bookRepository.updateChapter(widget.book.id, chapter);
+          Logger().i("Result Translation : ${resultTranslation}");
         } else {
           Logger().e("Null Response");
           chapter.statusTranslation = 2;
@@ -444,12 +452,22 @@ class _ChapterContentListState extends State<ChapterContentList> {
   }
 
   void updateChapter(Chapter chapter) {
+    var index = chapters.indexOf(chapter);
+    chapters[index] = chapter;
+    _translateRepository.addTranslate(widget.translate);
     _bookRepository.updateChapter(widget.book.id, chapter);
+    setState(() {});
   }
 
   void detailChapter(Chapter chapter) {
     int index = chapters.indexOf(chapter);
-
+    var findChapter = widget.book.chapters.firstWhereOrNull((element) =>
+        element.key == chapter.key &&
+        element.translateId == widget.translate.id &&
+        element.title == chapter.title);
+    if (findChapter != null) {
+      Logger().i("Find Chapter 2 : ${findChapter!.translatedContent}");
+    }
     showDialog(
         context: context,
         //context: _scaffoldKey.currentContext,

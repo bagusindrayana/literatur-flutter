@@ -136,17 +136,22 @@ class BookRepository {
     if (isar != null) {
       await isar.writeTxn<void>(() async {
         final book = await isar.books.get(bookId);
+
         if (book != null) {
           if (book.chapters.isNotEmpty) {
             final index = book.chapters.indexWhere((element) =>
                 element.translateId == chapter.translateId &&
-                element.title == chapter.title);
+                element.title!.trim() == chapter.title!.trim() &&
+                element.key!.trim() == chapter.key!.trim());
             if (index != -1) {
               var tmp = book.chapters;
               tmp[index] = chapter;
               book.chapters = tmp;
               await isar.books.put(book);
             }
+          } else {
+            book.chapters = [chapter];
+            await isar.books.put(book);
           }
         }
       });

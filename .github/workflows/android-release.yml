@@ -33,3 +33,8 @@ jobs:
     - run: flutter --version
     - run: flutter pub get
     - run: flutter build apk --release
+    - name: Create Github Release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "build/app/outputs/flutter-apk/app-release.apk"
+        token: ${{ secrets.PERSONAL_RELEASE_TOKEN }}

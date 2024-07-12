@@ -183,8 +183,8 @@ class _ChapterContentListState extends State<ChapterContentList> {
     setState(() {
       chapters = newChapters;
       widget.book.chapters = chapters;
-      _bookRepository.updateBook(widget.book.id, widget.book);
     });
+    saveBook();
     // getTranslateChapters();
     if (texts == "") {
       _translateStatus = TranslateStatus.error;
@@ -451,23 +451,28 @@ class _ChapterContentListState extends State<ChapterContentList> {
     }
   }
 
-  void updateChapter(Chapter chapter) {
+  void saveChapter(Chapter chapter) {
     var index = chapters.indexOf(chapter);
     chapters[index] = chapter;
-    _translateRepository.addTranslate(widget.translate);
-    _bookRepository.updateChapter(widget.book.id, chapter);
+
+    saveBook();
+    setState(() {});
+  }
+
+  void saveBook() async {
+    widget.book.chapters = chapters;
+    await _translateRepository.addTranslate(widget.translate);
+    await _bookRepository.updateBook(widget.book.id, widget.book);
     setState(() {});
   }
 
   void detailChapter(Chapter chapter) {
     int index = chapters.indexOf(chapter);
-    var findChapter = widget.book.chapters.firstWhereOrNull((element) =>
-        element.key == chapter.key &&
-        element.translateId == widget.translate.id &&
-        element.title == chapter.title);
-    if (findChapter != null) {
-      Logger().i("Find Chapter 2 : ${findChapter!.translatedContent}");
-    }
+    // var findChapter = widget.book.chapters.firstWhereOrNull((element) =>
+    //     element.key == chapter.key &&
+    //     element.translateId == widget.translate.id &&
+    //     element.title == chapter.title);
+
     showDialog(
         context: context,
         //context: _scaffoldKey.currentContext,
@@ -528,12 +533,12 @@ class _ChapterContentListState extends State<ChapterContentList> {
                                   onPressed: () {
                                     chapter.translatedContent =
                                         _contentController.text;
-                                    updateChapter(chapter);
+                                    saveChapter(chapter);
                                     Navigator.of(context).pop();
                                   },
                                 ),
                                 TextButton(
-                                  child: const Text("Translate Again"),
+                                  child: const Text("Translate Chapter"),
                                   onPressed: () {
                                     doTranslate(index, false);
                                     Navigator.of(context).pop();
@@ -614,12 +619,22 @@ class _ChapterContentListState extends State<ChapterContentList> {
                   onPressed: () {
                     onSubmitTranslate();
                   },
-                  child: Text('Translate'),
+                  child: Text('Translate All'),
                 ),
               )
             : Center(
                 child: CircularProgressIndicator(),
               ),
+        (_translateStatus != TranslateStatus.loading)
+            ? Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    saveBook();
+                  },
+                  child: Text('Save'),
+                ),
+              )
+            : SizedBox(),
       ],
     );
   }

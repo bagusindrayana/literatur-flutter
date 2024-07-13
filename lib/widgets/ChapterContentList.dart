@@ -162,7 +162,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
         if (findChapter != null) {
           if (selected[chapters.indexOf(findChapter)]) {
             findChapter.order = order;
-            findChapter.statusTranslation = 0;
+            // findChapter.statusTranslation = 0;
           }
           newChapters.add(findChapter);
         } else {

@@ -1,16 +1,10 @@
 # Literatur
 
-A new Flutter project.
+Read Epub and translate using AI.
+** This branch using reverse engineering to get access some API from Machine Translate and AI service (not always work), except Gemini using official API Key because its free**
 
-## Getting Started
+### Development
+- clone this repo
+- install requirements with `flutter pub get`
+- run the app with `flutter run --define=GEMINI_API_KEY=YOUR_GEMINI_API_KEY`
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.

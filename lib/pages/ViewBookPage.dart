@@ -113,55 +113,59 @@ class _ViewBookPageState extends State<ViewBookPage> {
         content: Container(
             height: MediaQuery.of(context).size.height / 3,
             child: SingleChildScrollView(
-              child: (translates.length == 0)
-                  ? Column(
-                      children: [
-                        Center(
-                          child: Text(
-                              "No translate found, please add translate first"),
-                        ),
-                        IconButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              Navigator.pushNamed(context, '/translate-book',
-                                  arguments: widget.book);
-                            },
-                            icon: Icon(Icons.add))
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        IconButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/translate-book',
-                                  arguments: widget.book);
-                            },
-                            icon: Icon(Icons.add)),
-                        for (Translate translate in translates)
-                          ListTile(
-                            onTap: () {
-                              selectTranslate(translate.id);
-                              Navigator.of(context).pop();
-                            },
-                            title: Text(
-                                "${translate.fromLanguage} to ${translate.toLanguage}"),
-                            trailing: IconButton(
-                              onPressed: () async {
-                                Navigator.of(context).pop();
-                                Navigator.pushNamed(
-                                    context, '/edit-translate-book',
-                                    arguments: {
-                                      "book": widget.book,
-                                      "translate": translate,
-                                    }).then((v) {
-                                  getBookData();
-                                });
-                              },
-                              icon: Icon(Icons.edit),
+              child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: (translates.length == 0)
+                      ? Column(
+                          children: [
+                            Center(
+                              child: Text(
+                                  "No translate found, please add translate first"),
                             ),
-                          ),
-                      ],
-                    ),
+                            IconButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  Navigator.pushNamed(
+                                      context, '/translate-book',
+                                      arguments: widget.book);
+                                },
+                                icon: Icon(Icons.add))
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            IconButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                      context, '/translate-book',
+                                      arguments: widget.book);
+                                },
+                                icon: Icon(Icons.add)),
+                            for (Translate translate in translates)
+                              ListTile(
+                                onTap: () {
+                                  selectTranslate(translate.id);
+                                  Navigator.of(context).pop();
+                                },
+                                title: Text(
+                                    "${translate.fromLanguage} to ${translate.toLanguage}"),
+                                trailing: IconButton(
+                                  onPressed: () async {
+                                    Navigator.of(context).pop();
+                                    Navigator.pushNamed(
+                                        context, '/edit-translate-book',
+                                        arguments: {
+                                          "book": widget.book,
+                                          "translate": translate,
+                                        }).then((v) {
+                                      getBookData();
+                                    });
+                                  },
+                                  icon: Icon(Icons.edit),
+                                ),
+                              ),
+                          ],
+                        )),
             )),
         actions: [
           TextButton(
@@ -213,9 +217,13 @@ class _ViewBookPageState extends State<ViewBookPage> {
       appBar: AppBar(
         title: Text("${widget.book.title}"),
         actions: [
-          IconButton(onPressed: () {
-            AdaptiveTheme.of(context).toggleThemeMode();
-          }, icon: AdaptiveTheme.of(context).mode.isDark ? Icon(Icons.light_mode):Icon(Icons.dark_mode)),
+          IconButton(
+              onPressed: () {
+                AdaptiveTheme.of(context).toggleThemeMode();
+              },
+              icon: AdaptiveTheme.of(context).mode.isDark
+                  ? Icon(Icons.light_mode)
+                  : Icon(Icons.dark_mode)),
           IconButton(
               onPressed: () {
                 openTransalteMenu();
@@ -283,6 +291,9 @@ class PagingText extends StatefulWidget {
 
 class _PagingTextState extends State<PagingText> {
   List<PagingChapter> _pageTexts = [];
+  List<String> _chapterTitles = [];
+  String? selectedChapter;
+
   int _currentIndex = 0;
   bool _needPaging = true;
   bool _isPaging = false;
@@ -302,6 +313,7 @@ class _PagingTextState extends State<PagingText> {
         _needPaging = true;
         _isPaging = false;
       });
+      getChapterTitles();
     }
   }
 
@@ -309,6 +321,7 @@ class _PagingTextState extends State<PagingText> {
       List<EpubChapter> chapters) {
     List<PagingChapter> responseData = [];
     Map<String, EpubByteContentFile> used = {};
+
     int index = 0;
     String title = "";
     widget.htmlFiles!.forEach((key, value) {
@@ -349,12 +362,15 @@ class _PagingTextState extends State<PagingText> {
         Chapter? c = widget.book.chapters.firstWhereOrNull((element) =>
             element.translateId == widget.translateId &&
             key.contains(element.key!));
-        if (c != null &&
-            c.translatedContent != null &&
-            parsedString.trim() != "") {
-          parsedString = c.translatedContent!;
+        if (c != null && parsedString.trim() != "") {
+          if (c.translatedContent != null) {
+            parsedString = c.translatedContent!;
+          }
+
           if (c.translatedTitle != null) {
             title = c.translatedTitle!;
+          } else {
+            title = c.title!;
           }
         }
       }
@@ -448,6 +464,63 @@ class _PagingTextState extends State<PagingText> {
         _isPaging = false;
       });
     }
+
+    getChapterTitles();
+  }
+
+  //get chapter titles
+  void getChapterTitles() {
+    //where translatedId
+    // List<Chapter> _list = widget.book.chapters
+    //     .where((element) => element.translateId == widget.translateId)
+    //     .toList();
+    // for (Chapter c in _list) {
+    //   _chapterTitles.add(c.translatedTitle ?? c.title!);
+    // }
+    _chapterTitles = _pageTexts.map((e) => e.title).toList();
+    print("Length: ${_chapterTitles.length}");
+    setState(() {
+      //remove duplicate titles
+      _chapterTitles = _chapterTitles.toSet().toList();
+      if (_chapterTitles.length > 0) {
+        selectedChapter = _chapterTitles.first;
+      }
+    });
+  }
+
+  void goToChapter(String title) {
+    int index = 0;
+    for (int i = 0; i < _pageTexts.length; i++) {
+      if (_pageTexts[i].title.trim() == title.trim()) {
+        index = i;
+        break;
+      }
+    }
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  void nextPage() {
+    if (_currentIndex < _pageTexts.length - 1) {
+      setState(() {
+        _currentIndex++;
+        selectedChapter = _pageTexts[_currentIndex].title;
+        print(selectedChapter);
+      });
+      if (widget.onPageChange != null) widget.onPageChange!(_currentIndex);
+    }
+  }
+
+  void prevPage() {
+    if (_currentIndex > 0) {
+      setState(() {
+        _currentIndex--;
+        selectedChapter = _pageTexts[_currentIndex].title;
+        print(selectedChapter);
+      });
+      if (widget.onPageChange != null) widget.onPageChange!(_currentIndex);
+    }
   }
 
   @override
@@ -470,8 +543,31 @@ class _PagingTextState extends State<PagingText> {
       children: [
         Column(
           children: [
-            if (_pageTexts.length > 0) Text(_pageTexts[_currentIndex].title),
-            Divider(),
+            // if (_pageTexts.length > 0) Text(_pageTexts[_currentIndex].title),
+            DropdownButton<String>(
+                value: selectedChapter,
+                icon: const Icon(Icons.arrow_downward),
+                elevation: 16,
+                // style: const TextStyle(color: Colors.deepPurple),
+                // underline: Container(
+                //   height: 2,
+                //   color: Colors.deepPurpleAccent,
+                // ),
+                isExpanded: true,
+                onChanged: (String? value) {
+                  setState(() {
+                    selectedChapter = value;
+                    goToChapter(value!);
+                  });
+                },
+                items: _chapterTitles
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList()),
+            // Divider(),
             Expanded(
               child: SizedBox.expand(
                 key: _pageKey,
@@ -480,19 +576,10 @@ class _PagingTextState extends State<PagingText> {
                         onHorizontalDragEnd: (dragDetail) {
                           if (dragDetail.primaryVelocity! < -5) {
                             //next
-                            setState(() {
-                              if (_currentIndex < _pageTexts.length - 1)
-                                _currentIndex++;
-                              if (widget.onPageChange != null)
-                                widget.onPageChange!(_currentIndex);
-                            });
+                            nextPage();
                           } else if (dragDetail.primaryVelocity! > 5) {
                             //prev
-                            setState(() {
-                              if (_currentIndex > 0) _currentIndex--;
-                              if (widget.onPageChange != null)
-                                widget.onPageChange!(_currentIndex);
-                            });
+                            prevPage();
                           }
                         },
                         child: (_pageTexts[_currentIndex].image != null)
@@ -515,16 +602,39 @@ class _PagingTextState extends State<PagingText> {
                                               16,
                                           //maximum width set to 100% of width
                                         ),
-                                        child: CachedMemoryImage(
-                                          fit: BoxFit.scaleDown,
-                                          uniqueKey:
-                                              "/${widget.book.id}/${_pageTexts[_currentIndex].title}/img/$_currentIndex",
-                                          errorWidget: const Text('Error'),
-                                          placeholder:
-                                              const CircularProgressIndicator(),
-                                          bytes: Uint8List.fromList(
-                                              _pageTexts[_currentIndex].image!),
-                                        ),
+                                        child: AdaptiveTheme.of(context)
+                                                .mode
+                                                .isDark
+                                            ? ColorFiltered(
+                                                colorFilter: ColorFilter.mode(
+                                                  Colors.white,
+                                                  BlendMode.saturation,
+                                                ),
+                                                child: CachedMemoryImage(
+                                                  fit: BoxFit.scaleDown,
+                                                  uniqueKey:
+                                                      "/${widget.book.id}/${_pageTexts[_currentIndex].title}/img/$_currentIndex",
+                                                  errorWidget:
+                                                      const Text('Error'),
+                                                  placeholder:
+                                                      const CircularProgressIndicator(),
+                                                  bytes: Uint8List.fromList(
+                                                      _pageTexts[_currentIndex]
+                                                          .image!),
+                                                ),
+                                              )
+                                            : CachedMemoryImage(
+                                                fit: BoxFit.scaleDown,
+                                                uniqueKey:
+                                                    "/${widget.book.id}/${_pageTexts[_currentIndex].title}/img/$_currentIndex",
+                                                errorWidget:
+                                                    const Text('Error'),
+                                                placeholder:
+                                                    const CircularProgressIndicator(),
+                                                bytes: Uint8List.fromList(
+                                                    _pageTexts[_currentIndex]
+                                                        .image!),
+                                              ),
                                       ),
                                     ),
                                     Text(_pageTexts[_currentIndex].content),
@@ -547,17 +657,14 @@ class _PagingTextState extends State<PagingText> {
                     onPressed: () {
                       setState(() {
                         _currentIndex = 0;
+                        selectedChapter = _pageTexts[_currentIndex].title;
                       });
                     },
                   ),
                   IconButton(
                     icon: Icon(Icons.navigate_before),
                     onPressed: () {
-                      setState(() {
-                        if (_currentIndex > 0) _currentIndex--;
-                        if (widget.onPageChange != null)
-                          widget.onPageChange!(_currentIndex);
-                      });
+                      prevPage();
                     },
                   ),
                   Text(
@@ -568,12 +675,7 @@ class _PagingTextState extends State<PagingText> {
                   IconButton(
                     icon: Icon(Icons.navigate_next),
                     onPressed: () {
-                      setState(() {
-                        if (_currentIndex < _pageTexts.length - 1)
-                          _currentIndex++;
-                        if (widget.onPageChange != null)
-                          widget.onPageChange!(_currentIndex);
-                      });
+                      nextPage();
                     },
                   ),
                   IconButton(
@@ -581,6 +683,7 @@ class _PagingTextState extends State<PagingText> {
                     onPressed: () {
                       setState(() {
                         _currentIndex = _pageTexts.length - 1;
+                        selectedChapter = _pageTexts[_currentIndex].title;
                       });
                     },
                   ),

@@ -25,6 +25,18 @@ class BookCard extends StatefulWidget {
 
 class _BookCardState extends State<BookCard> {
   bool isSelected = false;
+
+  @override
+  void didUpdateWidget(BookCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.selectMode != widget.selectMode) {
+      setState(() {
+        isSelected = widget.isSelected ?? false;
+      });
+    }
+  }
+
   @override
   void initState() {
     // TODO: implement initState

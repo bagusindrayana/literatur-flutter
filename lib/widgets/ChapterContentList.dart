@@ -112,27 +112,24 @@ class _ChapterContentListState extends State<ChapterContentList> {
           title = _chapter.Title!;
         }
       }
-      if (title != "") {
-        final document = parse(value.Content!);
-        String parsedString = parse(document.body!.text).documentElement!.text;
-        if (parsedString.trim() != "") {
-          Chapter newChapter = Chapter();
-          File file = new File(key);
-          String basename = path.basename(file.path);
-          newChapter.key = basename;
-          newChapter.title = title.trim();
-          newChapter.originalContent = parsedString;
-          newChapter.fromLanguage = widget.translate.fromLanguage;
-          newChapter.toLanguage = widget.translate.toLanguage;
-          newChapter.prePrompt = widget.translate.prePrompt;
-          newChapter.statusTranslation = 0;
-          contents.add(newChapter);
-        }
-        // if (contents[title.trim()] != null) {
-        //   contents[title.trim()] = contents[title.trim()]! + parsedString;
-        // } else {
-        //   contents[title.trim()] = parsedString;
-        // }
+      if (title == "") {
+        title = key;
+      }
+
+      final document = parse(value.Content!);
+      String parsedString = parse(document.body!.text).documentElement!.text;
+      if (parsedString.trim() != "") {
+        Chapter newChapter = Chapter();
+        File file = new File(key);
+        String basename = path.basename(file.path);
+        newChapter.key = basename;
+        newChapter.title = title.trim();
+        newChapter.originalContent = parsedString;
+        newChapter.fromLanguage = widget.translate.fromLanguage;
+        newChapter.toLanguage = widget.translate.toLanguage;
+        newChapter.prePrompt = widget.translate.prePrompt;
+        newChapter.statusTranslation = 0;
+        contents.add(newChapter);
       }
     });
 
@@ -194,11 +191,11 @@ class _ChapterContentListState extends State<ChapterContentList> {
 
     setState(() {});
     Future.delayed(Duration(seconds: 1), () {
-      translateTitle(texts);
+      doTranslateTitle(texts);
     });
   }
 
-  void translateTitle(String texts) async {
+  void doTranslateTitle(String texts) async {
     await Translatehelper.translate(
         widget.provider!,
         texts,
@@ -271,7 +268,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
           var findIndex = bookChapters.indexOf(findChapter);
           if (findIndex >= 0 && selected[findIndex]) {
             findChapter.order = order;
-            findChapter.statusTranslation = -1;
+            // findChapter.statusTranslation = -1;
           }
           newChapters.add(findChapter);
         } else {
@@ -379,7 +376,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
         }
         // print("Berhasil : ${berhasil}");
         if (berhasil) {
-          // Logger().i("Result Translation : ${resultTranslation}");
+          // Logger().i("Translation Result : ${resultTranslation}");
           chapter.translatedContent = resultTranslation;
           chapter.statusTranslation = 1;
           _bookRepository.updateChapter(widget.book.id, chapter);
@@ -416,7 +413,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
           chapter.translatedContent = resultTranslation;
           chapter.statusTranslation = 1;
           _bookRepository.updateChapter(widget.book.id, chapter);
-          Logger().i("Result Translation : ${resultTranslation}");
+          Logger().i("Translation Result : ${resultTranslation}");
         } else {
           Logger().e("Null Response");
           chapter.statusTranslation = 2;
@@ -479,6 +476,8 @@ class _ChapterContentListState extends State<ChapterContentList> {
         builder: (context) {
           TextEditingController _contentController =
               TextEditingController(text: chapter.translatedContent);
+          TextEditingController _titleController = TextEditingController(
+              text: "${chapter.translatedTitle ?? chapter.title}");
           return Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
@@ -490,7 +489,11 @@ class _ChapterContentListState extends State<ChapterContentList> {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        Text("${chapter.translatedTitle ?? chapter.title}"),
+                        TextField(
+                          controller: _titleController,
+                          decoration: const InputDecoration(
+                              hintText: 'Title', label: Text('Title')),
+                        ),
                         const SizedBox(
                           height: 50,
                           child: TabBar(
@@ -512,8 +515,8 @@ class _ChapterContentListState extends State<ChapterContentList> {
                                 keyboardType: TextInputType.multiline,
                                 maxLines: null,
                                 decoration: const InputDecoration(
-                                    hintText: 'Edit Result Translation',
-                                    label: Text('Result Translation')),
+                                    hintText: 'Edit Translation Result',
+                                    label: Text('Translation Result')),
                               ),
                               SingleChildScrollView(
                                 child: SelectableText(
@@ -533,6 +536,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
                                   onPressed: () {
                                     chapter.translatedContent =
                                         _contentController.text;
+                                    chapter.title = _titleController.text;
                                     saveChapter(chapter);
                                     Navigator.of(context).pop();
                                   },
@@ -563,6 +567,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
   }
 
   Widget iconLoading(Chapter chapter) {
+    print(chapter.statusTranslation);
     if (chapter.statusTranslation == 0 &&
         _translateStatus == TranslateStatus.loading &&
         selected[chapters.indexOf(chapter)]) {
@@ -592,6 +597,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
         Text("Book Content : "),
         Column(
           children: chapters.map((chapter) {
+            print(chapter.statusTranslation);
             return ListTile(
               onTap: () {
                 detailChapter(chapter);

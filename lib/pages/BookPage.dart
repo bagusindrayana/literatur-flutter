@@ -76,33 +76,69 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _addBook() async {
-    setState(() {
-      showLoading = true;
-    });
-
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['epub'],
-      );
-
+  void _pickEpub() {
+    FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['epub'],
+    ).then((result) {
       if (result != null) {
         PlatformFile file = result.files.first;
+        _parseEpub(file);
+      }
+    });
+  }
 
-        List<int>? bytes;
-        if (file.bytes != null) {
-          bytes = file.bytes!;
-        } else {
-          String fullPath = file.path!;
-          var targetFile = File(fullPath);
-          bytes = await targetFile.readAsBytes();
-        }
+  void _insertBook(Book book) {
+    _bookRepository.addBook(book, book.originalFilePath!).then((v) {
+      setState(() {
+        showLoading = false;
+      });
+      _loadData();
+    });
+  }
 
-        if (bytes != null) {
-          try {
-            EpubBook epubBook = await EpubReader.readBook(bytes);
+  void _copyEpuub(Book book) {
+    File originalFile = File(book.originalFilePath!);
+    File targetFile = File(book.filePath!);
 
+    if (targetFile.existsSync()) {
+      targetFile.deleteSync();
+    }
+
+    targetFile.create(recursive: true).then((_) {
+      targetFile.writeAsBytes(originalFile.readAsBytesSync()).then((_) {
+        _insertBook(book);
+      });
+    });
+  }
+
+  void _copyCoverImage(
+    Book book,
+    images.Image coverImage,
+  ) {
+    //save image
+    if (book.coverImage != null) {
+      File coverImageFile = File(book.coverImage!);
+      if (coverImageFile.existsSync()) {
+        coverImageFile.deleteSync();
+      }
+
+      coverImageFile.create(recursive: true).then((_) {
+        coverImageFile.writeAsBytes(images.encodeJpg(coverImage)).then((_) {
+          _copyEpuub(book);
+        });
+      });
+    }
+  }
+
+  void _parseEpub(PlatformFile file) {
+    List<int>? bytes = file.bytes;
+    if (bytes == null) {
+      {
+        String fullPath = file.path!;
+        var targetFile = File(fullPath);
+        targetFile.readAsBytes().then((bytes) {
+          EpubReader.readBook(bytes).then((EpubBook epubBook) {
             images.Image? coverImage = epubBook.CoverImage;
             if (coverImage == null) {
               EpubContent bookContent = epubBook.Content!;
@@ -113,55 +149,44 @@ class _HomePageState extends State<HomePage> {
               }
             }
             final timeString = DateTime.now().millisecondsSinceEpoch.toString();
-            final directory = await getApplicationDocumentsDirectory();
-            //copy file to storage
-            String saveDir = directory.path + '/books';
-            String savePath = '$saveDir/${timeString}_${file.name}';
-            File targetFile = File(savePath);
-            if (await targetFile.exists()) {
-              await targetFile.delete();
-            }
+            getApplicationDocumentsDirectory().then((directory) {
+              //copy file to storage
+              String saveDir = directory.path + '/books';
+              String savePath = '$saveDir/${timeString}_${file.name}';
 
-            await targetFile.create(recursive: true);
-            await targetFile.writeAsBytes(bytes);
-
-            //save image
-            if (coverImage != null) {
-              String coverImagePath = '$saveDir/${timeString}_${file.name}.jpg';
-              File coverImageFile = File(coverImagePath);
-              if (await coverImageFile.exists()) {
-                await coverImageFile.delete();
+              Book newBook = Book();
+              newBook.title =
+                  file.name.replaceAll(file.extension.toString(), "");
+              newBook.filePath = savePath;
+              newBook.originalFilePath = file.path;
+              newBook.chapters = [];
+              if (coverImage != null) {
+                newBook.coverImage = '$saveDir/${timeString}_${file.name}.jpg';
+                _copyCoverImage(newBook, coverImage);
+              } else {
+                _copyEpuub(newBook);
               }
-
-              await coverImageFile.create(recursive: true);
-              await coverImageFile.writeAsBytes(images.encodeJpg(coverImage));
-            }
-
-            Book newBook = Book();
-            newBook.title = file.name.replaceAll(file.extension.toString(), "");
-            newBook.filePath = savePath;
-            newBook.originalFilePath = file.path;
-            newBook.chapters = [];
-            if (coverImage != null) {
-              newBook.coverImage = '$saveDir/${timeString}_${file.name}.jpg';
-            }
-
-            await _bookRepository.addBook(newBook, file.path);
-            await _loadData();
-          } catch (e) {
-            Logger().e(e);
-            UIHelper.showSnackBar(context, "Failed to parse file");
-          }
-        }
+            });
+          });
+        });
       }
+    }
+  }
+
+  void _addBook() {
+    setState(() {
+      showLoading = true;
+    });
+
+    try {
+      _pickEpub();
     } catch (e) {
       Logger().e(e);
+      setState(() {
+        showLoading = false;
+      });
       UIHelper.showSnackBar(context, "Failed to open file");
     }
-
-    setState(() {
-      showLoading = false;
-    });
   }
 
   @override
@@ -268,7 +293,7 @@ class _HomePageState extends State<HomePage> {
                               thumbnail: books[index].coverImage != null
                                   ? widgets.Image.file(
                                       File("${books[index].coverImage}"),
-                                      fit: BoxFit.fitWidth)
+                                      fit: BoxFit.fitHeight)
                                   : null,
                               selectMode: multiSelectMode,
                               isSelected:
@@ -313,13 +338,19 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () {
                     _addBook();
                   },
-                  child: Icon(Icons.add),
+                  child: Icon(
+                    Icons.add,
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                  ),
                 )
               : FloatingActionButton(
                   onPressed: () {
                     _multiDeleteBooks();
                   },
-                  child: Icon(Icons.delete),
+                  child: Icon(
+                    Icons.delete,
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                  ),
                 )
           : null,
     );

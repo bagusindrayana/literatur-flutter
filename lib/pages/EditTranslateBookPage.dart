@@ -28,13 +28,19 @@ class EditTranslateBookPage extends StatefulWidget {
 
 class _EditTranslateBookPageState extends State<EditTranslateBookPage> {
   TranslateRepository _translateRepository = TranslateRepository();
+  BookRepository _bookRepository = BookRepository();
   TranslateStatus _status = TranslateStatus.none;
   List<String> providers = Translatehelper.providers;
 
   String provider = 'Gemini';
 
-  void deleteTranslate() {
-    _translateRepository.deleteTranslate(widget.translate.id);
+  void deleteTranslate() async {
+    await _translateRepository.deleteTranslate(widget.translate.id);
+    //remove chapters from book with translateId
+    widget.book.chapters
+        .removeWhere((element) => element.translateId == widget.translate.id);
+    await _bookRepository.updateBook(widget.book.id, widget.book);
+
     Navigator.of(context).pop();
   }
 

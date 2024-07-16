@@ -1,22 +1,20 @@
-import 'dart:collection';
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:Literatur/models/Book.dart';
 import 'package:Literatur/models/Translate.dart';
 import 'package:Literatur/pages/EditTranslateBookPage.dart';
 import 'package:Literatur/pages/TranslateBookPage.dart';
 import 'package:Literatur/pages/ViewBookPage.dart';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:epubx/epubx.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
-import 'package:logger/logger.dart';
 import 'package:Literatur/pages/BookPage.dart';
 import 'package:adaptive_theme/adaptive_theme.dart';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 void main() async {
-  Gemini.init(apiKey: 'AIzaSyCijsbFwjSHKQpsNakJZWdlX6vNSS3DBfY');
+  await dotenv.load(fileName: ".env");
+  Gemini.init(
+      apiKey: String.fromEnvironment('GEMINI_API_KEY',
+          defaultValue: dotenv.env['GEMINI_API_KEY'] ?? ""));
   WidgetsFlutterBinding.ensureInitialized();
   final savedThemeMode = await AdaptiveTheme.getThemeMode();
   runApp(MyApp(savedThemeMode: savedThemeMode));

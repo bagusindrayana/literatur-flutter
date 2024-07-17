@@ -24,6 +24,7 @@ class ViewBookPage extends StatefulWidget {
 }
 
 class _ViewBookPageState extends State<ViewBookPage> {
+  Book book = Book();
   List<EpubChapter> chapters = [];
   Map<String, EpubByteContentFile> images = {};
   Map<String, EpubTextContentFile> htmlFiles = {};
@@ -36,7 +37,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
   //get chapter from book
   // void getChapter() async {
   //   await DefaultCacheManager().emptyCache();
-  //   var targetFile = File(widget.book.filePath!);
+  //   var targetFile = File(book.filePath!);
   //   var bytes = await targetFile.readAsBytes();
   //   EpubBook epubBook = await EpubReader.readBook(bytes);
 
@@ -69,21 +70,41 @@ class _ViewBookPageState extends State<ViewBookPage> {
       chapters.addAll(await subChapter(chapter));
     }
 
-    print(chapters.length);
-
     return chapters;
   }
 
   Future<void> getTranslate() async {
-    translates = await _translateRepository.getTranslates(widget.book.id);
+    translates = await _translateRepository.getTranslates(book.id);
+    await _bookRepository.getBookById(widget.book.id).then((value) {
+      if (value != null) {
+        setState(() {
+          book = value;
+        });
+      } else {
+        setState(() {
+          book = widget.book;
+        });
+      }
+    });
     setState(() {
       translates = translates;
     });
   }
 
   void getBookData() async {
+    await _bookRepository.getBookById(widget.book.id).then((value) {
+      if (value != null) {
+        setState(() {
+          book = value;
+        });
+      } else {
+        setState(() {
+          book = widget.book;
+        });
+      }
+    });
     await DefaultCacheManager().emptyCache();
-    var targetFile = File(widget.book.filePath!);
+    var targetFile = File(book.filePath!);
     var bytes = await targetFile.readAsBytes();
     EpubBook epubBook = await EpubReader.readBook(bytes);
 
@@ -91,9 +112,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
     List<EpubChapter> ch = await getChapter(epubBook);
     if (mounted) {
       setState(() {
-        translateId = widget.book.lastTranslateId != null
-            ? widget.book.lastTranslateId!
-            : 0;
+        translateId = book.lastTranslateId != null ? book.lastTranslateId! : 0;
         images = bookContent.Images!;
         chapters = ch;
         htmlFiles = bookContent.Html!;
@@ -194,11 +213,13 @@ class _ViewBookPageState extends State<ViewBookPage> {
     }
   }
 
-  void selectTranslate(int id) {
-    _bookRepository.updateLastTranslateId(widget.book.id, id);
+  void selectTranslate(int id) async {
+    await _bookRepository.updateLastTranslateId(book.id, id);
     setState(() {
+      book.lastTranslateId = id;
       translateId = id;
     });
+    getBookData();
   }
 
   @override
@@ -215,7 +236,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.book.title}"),
+        title: Text("${book.title}"),
         actions: [
           IconButton(
               onPressed: () {
@@ -242,12 +263,11 @@ class _ViewBookPageState extends State<ViewBookPage> {
           images: images,
           htmlFiles: htmlFiles,
           onPageChange: (int index) {
-            widget.book.lastReadPosition = index.toString();
-            _bookRepository.updateLastReadPosition(
-                widget.book.id, index.toString());
+            book.lastReadPosition = index.toString();
+            _bookRepository.updateLastReadPosition(book.id, index.toString());
           },
-          currentPage: widget.book.lastReadPosition != null
-              ? int.parse(widget.book.lastReadPosition.toString())
+          currentPage: book.lastReadPosition != null
+              ? int.parse(book.lastReadPosition.toString())
               : 0,
           translateId: translateId,
         ),
@@ -312,9 +332,10 @@ class _PagingTextState extends State<PagingText> {
         _currentIndex = 0;
         _needPaging = true;
         _isPaging = false;
+        selectedChapter = null;
       });
-      getChapterTitles();
     }
+    getChapterTitles();
   }
 
   Future<List<PagingChapter>> generatePaginateTexts(
@@ -470,22 +491,16 @@ class _PagingTextState extends State<PagingText> {
 
   //get chapter titles
   void getChapterTitles() {
-    //where translatedId
-    // List<Chapter> _list = widget.book.chapters
-    //     .where((element) => element.translateId == widget.translateId)
-    //     .toList();
-    // for (Chapter c in _list) {
-    //   _chapterTitles.add(c.translatedTitle ?? c.title!);
-    // }
     _chapterTitles = _pageTexts.map((e) => e.title).toList();
-    print("Length: ${_chapterTitles.length}");
-    setState(() {
-      //remove duplicate titles
-      _chapterTitles = _chapterTitles.toSet().toList();
-      if (_chapterTitles.length > 0) {
-        selectedChapter = _chapterTitles.first;
-      }
-    });
+    if (mounted) {
+      setState(() {
+        //remove duplicate titles
+        _chapterTitles = _chapterTitles.toSet().toList();
+        if (_chapterTitles.length > 0 && selectedChapter == null) {
+          selectedChapter = _chapterTitles.first;
+        }
+      });
+    }
   }
 
   void goToChapter(String title) {
@@ -506,7 +521,6 @@ class _PagingTextState extends State<PagingText> {
       setState(() {
         _currentIndex++;
         selectedChapter = _pageTexts[_currentIndex].title;
-        print(selectedChapter);
       });
       if (widget.onPageChange != null) widget.onPageChange!(_currentIndex);
     }
@@ -517,7 +531,6 @@ class _PagingTextState extends State<PagingText> {
       setState(() {
         _currentIndex--;
         selectedChapter = _pageTexts[_currentIndex].title;
-        print(selectedChapter);
       });
       if (widget.onPageChange != null) widget.onPageChange!(_currentIndex);
     }

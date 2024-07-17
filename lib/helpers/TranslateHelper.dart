@@ -94,7 +94,7 @@ class Translatehelper {
         var data = jsonDecode(response.body);
         successCallback(data["data"]["translations"][0]["translatedText"]);
       } else {
-        errorCallback("Failed to translate text");
+        errorCallback("Failed to translate text : ${response.body}");
       }
     } catch (e) {
       errorCallback(e);
@@ -139,7 +139,7 @@ class Translatehelper {
         var data = jsonDecode(response.body);
         successCallback(data["translations"][0]["text"]);
       } else {
-        errorCallback("Failed to translate text");
+        errorCallback("Failed to translate text : ${response.body}");
       }
     } catch (e) {
       errorCallback(e);
@@ -178,13 +178,13 @@ class Translatehelper {
             }
             successCallback(result);
           } else {
-            errorCallback("Failed to translate text");
+            errorCallback("Failed to translate text : ${result}");
           }
         } else {
-          errorCallback("Failed to translate text");
+          errorCallback("Failed to translate text : ${data}");
         }
       } else {
-        errorCallback("Failed to translate text");
+        errorCallback("Failed to translate text : ${response.body}");
       }
     } catch (e) {
       print(e);

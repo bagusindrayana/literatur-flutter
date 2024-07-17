@@ -18,6 +18,8 @@ import 'package:path/path.dart' as path;
 
 enum TranslateStatus { loading, finish, error, none }
 
+enum LoadDataStatus { loading, finish, error, none }
+
 class ChapterContentList extends StatefulWidget {
   final Book book;
   final Translate translate;
@@ -42,6 +44,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
   BookRepository _bookRepository = BookRepository();
   TranslateRepository _translateRepository = TranslateRepository();
   TranslateStatus _translateStatus = TranslateStatus.none;
+  LoadDataStatus _loadDataStatus = LoadDataStatus.none;
 
   List<Chapter> chapters = [];
   List<bool> selected = [];
@@ -123,6 +126,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
         File file = new File(key);
         String basename = path.basename(file.path);
         newChapter.key = basename;
+        newChapter.translateId = widget.translate.id;
         newChapter.title = title.trim();
         newChapter.originalContent = parsedString;
         newChapter.fromLanguage = widget.translate.fromLanguage;
@@ -152,6 +156,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
         texts += "${c.title!.trim()} \n";
         //find chapter by key
         var findChapter = chapters.firstWhereOrNull((element) =>
+            element.translateId > 0 &&
             element.key == c.key &&
             element.translateId == widget.translate.id &&
             element.title == c.title);
@@ -220,17 +225,18 @@ class _ChapterContentListState extends State<ChapterContentList> {
         var arrTranslate = value.trim().split("\n");
 
         for (var i = 0; i < arr.length; i++) {
-          var findChapters = chapters.where((element) =>
-              element.translateId == widget.translate.id &&
-              element.title!.trim() == arr[i].trim());
-          findChapters.forEach((findChapter) {
-            if (i < arrTranslate.length) {
+          if (i < arrTranslate.length) {
+            var findChapters = chapters.where((element) =>
+                element.translateId > 0 &&
+                element.translateId == widget.translate.id &&
+                element.title!.trim() == arr[i].trim());
+            findChapters.forEach((findChapter) {
               findChapter.translatedTitle = arrTranslate[i];
               _bookRepository.updateChapter(widget.book.id, findChapter);
-            } else {
-              Logger().i("${arr[i].trim()}");
-            }
-          });
+            });
+          } else {
+            Logger().i("${arr[i].trim()}");
+          }
         }
       }
       setState(() {
@@ -265,52 +271,59 @@ class _ChapterContentListState extends State<ChapterContentList> {
     //   //     .toList()
     //   //   ..sort((a, b) => a.order.compareTo(b.order));
     // });
-
-    var originalChapters = await getChapterContent();
-    var bookChapters = widget.book.chapters;
-    // print("Book Chapters : ${bookChapters.length}");
-    // print("Translate ID : ${widget.translate.id}");
-    selected = List.generate(originalChapters.length, (index) => true);
-
-    int order = 0;
-
+    setState(() {
+      _loadDataStatus = LoadDataStatus.loading;
+    });
     List<Chapter> newChapters = [];
 
-    originalChapters.forEach((Chapter c) {
-      if (c.originalContent!.trim() != "") {
-        // print("Original Title : ${c.title!.trim()}");
-        //find chapter by key
-        var findChapter = bookChapters.firstWhereOrNull((element) =>
-            element.key == c.key &&
-            element.translateId == widget.translate.id &&
-            element.title!.trim() == c.title!.trim());
-        if (findChapter != null) {
-          findChapter.order = order;
-          // findChapter.statusTranslation = -1;
-          findChapter.fromLanguage = widget.translate.fromLanguage;
-          findChapter.toLanguage = widget.translate.toLanguage;
-          findChapter.prePrompt = widget.translate.prePrompt;
-          newChapters.add(findChapter);
-        } else {
-          Chapter newChapter = c;
-          newChapter.order = order;
-          newChapter.translateId = widget.translate.id;
-          newChapter.prePrompt = widget.translate.prePrompt;
-          newChapter.statusTranslation = -1;
-          newChapter.fromLanguage = widget.translate.fromLanguage;
-          newChapter.toLanguage = widget.translate.toLanguage;
+    try {
+      getChapterContent().then((originalChapters) {
+        var bookChapters = widget.book.chapters;
+        selected = List.generate(originalChapters.length, (index) => true);
 
-          newChapters.add(newChapter);
-        }
-      }
-      order++;
-    });
+        int order = 0;
 
-    setState(() {
-      chapters = newChapters;
+        originalChapters.forEach((Chapter c) {
+          if (c.originalContent!.trim() != "") {
+            var findChapter = bookChapters.firstWhereOrNull((element) =>
+                element.translateId > 0 &&
+                element.key == c.key &&
+                element.translateId == widget.translate.id &&
+                element.title!.trim() == c.title!.trim());
+            if (findChapter != null) {
+              findChapter.order = order;
+              // findChapter.statusTranslation = -1;
+              findChapter.fromLanguage = widget.translate.fromLanguage;
+              findChapter.toLanguage = widget.translate.toLanguage;
+              findChapter.prePrompt = widget.translate.prePrompt;
+              newChapters.add(findChapter);
+            } else {
+              Chapter newChapter = c;
+              newChapter.order = order;
+              newChapter.translateId = widget.translate.id;
+              newChapter.prePrompt = widget.translate.prePrompt;
+              newChapter.statusTranslation = -1;
+              newChapter.fromLanguage = widget.translate.fromLanguage;
+              newChapter.toLanguage = widget.translate.toLanguage;
 
-      //widget.book.chapters = chapters;
-    });
+              newChapters.add(newChapter);
+            }
+          }
+          order++;
+        });
+        setState(() {
+          chapters = newChapters;
+          _loadDataStatus = LoadDataStatus.finish;
+          //widget.book.chapters = chapters;
+        });
+      });
+    } catch (e) {
+      Logger().e(e);
+      UIHelper.showSnackBar(context, "Failed load data : ${e.toString()}");
+      setState(() {
+        _loadDataStatus = LoadDataStatus.error;
+      });
+    }
   }
 
   void doTranslate(int index, bool next) async {
@@ -633,28 +646,32 @@ class _ChapterContentListState extends State<ChapterContentList> {
     return Column(
       children: [
         Text("Book Content : "),
-        Column(
-          children: chapters.map((chapter) {
-            return ListTile(
-              onTap: () {
-                if (chapter.statusTranslation != 0) {
-                  detailChapter(chapter);
-                }
-              },
-              leading: Checkbox(
-                value: selected[chapters.indexOf(chapter)],
-                onChanged: (bool? value) {
-                  setState(() {
-                    selected[chapters.indexOf(chapter)] = value!;
-                  });
-                },
+        (_loadDataStatus == LoadDataStatus.loading)
+            ? Center(
+                child: CircularProgressIndicator(),
+              )
+            : Column(
+                children: chapters.map((chapter) {
+                  return ListTile(
+                    onTap: () {
+                      if (chapter.statusTranslation != 0) {
+                        detailChapter(chapter);
+                      }
+                    },
+                    leading: Checkbox(
+                      value: selected[chapters.indexOf(chapter)],
+                      onChanged: (bool? value) {
+                        setState(() {
+                          selected[chapters.indexOf(chapter)] = value!;
+                        });
+                      },
+                    ),
+                    title: Text(chapter.translatedTitle ?? chapter.title!),
+                    subtitle: Text(chapter.key ?? "-"),
+                    trailing: iconLoading(chapter),
+                  );
+                }).toList(),
               ),
-              title: Text(chapter.translatedTitle ?? chapter.title!),
-              subtitle: Text(chapter.key ?? "-"),
-              trailing: iconLoading(chapter),
-            );
-          }).toList(),
-        ),
         SizedBox(
           height: 8,
         ),

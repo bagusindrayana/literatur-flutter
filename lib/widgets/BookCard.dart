@@ -68,7 +68,7 @@ class _BookCardState extends State<BookCard> {
         child: Column(
           children: [
             Container(
-              height: 170,
+              height: 150,
               color: Colors.grey,
               child: Stack(children: [
                 Align(

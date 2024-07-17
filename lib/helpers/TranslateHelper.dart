@@ -134,7 +134,6 @@ class Translatehelper {
     try {
       http.Response response = await http.post(Uri.parse(url),
           body: jsonEncode(body), headers: headers);
-      Logger().i(response.body);
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         successCallback(data["translations"][0]["text"]);

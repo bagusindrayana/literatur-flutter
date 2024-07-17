@@ -174,7 +174,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
                                     Navigator.pushNamed(
                                         context, '/edit-translate-book',
                                         arguments: {
-                                          "book": widget.book,
+                                          "book": book,
                                           "translate": translate,
                                         }).then((v) {
                                       getBookData();

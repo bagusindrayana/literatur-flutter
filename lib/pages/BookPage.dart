@@ -300,7 +300,7 @@ class _HomePageState extends State<HomePage> {
                               thumbnail: books[index].coverImage != null
                                   ? widgets.Image.file(
                                       File("${books[index].coverImage}"),
-                                      fit: BoxFit.fitHeight)
+                                      fit: BoxFit.contain)
                                   : null,
                               selectMode: multiSelectMode,
                               isSelected:

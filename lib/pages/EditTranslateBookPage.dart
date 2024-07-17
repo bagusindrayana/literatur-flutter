@@ -37,8 +37,11 @@ class _EditTranslateBookPageState extends State<EditTranslateBookPage> {
   void deleteTranslate() async {
     await _translateRepository.deleteTranslate(widget.translate.id);
     //remove chapters from book with translateId
-    widget.book.chapters
+    List<Chapter> chapters = [];
+    chapters.addAll(widget.book.chapters);
+    chapters
         .removeWhere((element) => element.translateId == widget.translate.id);
+    widget.book.chapters = chapters;
     await _bookRepository.updateBook(widget.book.id, widget.book);
 
     Navigator.of(context).pop();

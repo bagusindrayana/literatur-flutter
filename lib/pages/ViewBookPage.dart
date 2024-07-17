@@ -146,7 +146,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
                                   Navigator.of(context).pop();
                                   Navigator.pushNamed(
                                       context, '/translate-book',
-                                      arguments: widget.book);
+                                      arguments: book);
                                 },
                                 icon: Icon(Icons.add))
                           ],
@@ -157,7 +157,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
                                 onPressed: () {
                                   Navigator.pushNamed(
                                       context, '/translate-book',
-                                      arguments: widget.book);
+                                      arguments: book);
                                 },
                                 icon: Icon(Icons.add)),
                             for (Translate translate in translates)
@@ -255,7 +255,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: PagingText(
-          widget.book,
+          book,
           chapters,
           style: const TextStyle(
             fontSize: 16,

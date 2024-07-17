@@ -1,16 +1,10 @@
 # Literatur
 
-A new Flutter project.
+Read Epub and translate using AI.
 
-## Getting Started
+### Development
+- clone this repo
+- install requirements with `flutter pub get`
+- run the app with `flutter run --dart-define=GEMINI_API_KEY=YOUR_API_KEY,GOOGLE_TRANSLATE_API_KEY=YOUR_API_KEY,GROQ_API_KEY=YOUR_API_KEY,DEEPL_API_KEY=YOUR_API_KEY` 
+- or make `.env` file with the keys and run `flutter run --dart-define-from-file=.env`
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.

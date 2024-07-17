@@ -51,9 +51,7 @@ dependencies:
   flutter_html: ^3.0.0-beta.2
   flutter_cache_manager: ^3.3.2
   flutter_gemini: ^2.0.4
-  translator: ^1.0.0
   japanese_word_tokenizer: ^0.0.3
-  simplytranslate: ^2.0.2
   jieba_flutter: ^0.1.1
   uuid: ^4.4.0
   wakelock_plus: ^1.2.5

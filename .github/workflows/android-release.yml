@@ -28,7 +28,7 @@ jobs:
         flutter-version-file: pubspec.yaml
     - run: flutter --version
     - run: flutter pub get
-    - run: flutter build --define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} apk --release
+    - run: flutter build --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} apk --release
     - name: Create Github Release
       uses: ncipollo/release-action@v1
       with:

@@ -170,9 +170,9 @@ class Translatehelper {
         if (data["choices"] != null && data["choices"].length > 0) {
           var result = data["choices"][0]["message"]["content"];
           if (result != null && result.isNotEmpty) {
-            if (result.contains('Here is the translation') ||
-                result.contains('berikut hasil terjemahan') ||
-                result.contains('berikut adalah terjemahan')) {
+            if (result!.toLowerCase().contains('here is the translation') ||
+                result!.toLowerCase().contains('berikut hasil terjemahan') ||
+                result!.toLowerCase().contains('berikut adalah terjemahan')) {
               //split new line and remove first line
               result = result.split('\n').sublist(1).join('\n');
             }

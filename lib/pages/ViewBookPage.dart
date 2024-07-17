@@ -332,9 +332,10 @@ class _PagingTextState extends State<PagingText> {
         _currentIndex = 0;
         _needPaging = true;
         _isPaging = false;
+        selectedChapter = null;
       });
-      getChapterTitles();
     }
+    getChapterTitles();
   }
 
   Future<List<PagingChapter>> generatePaginateTexts(
@@ -495,7 +496,7 @@ class _PagingTextState extends State<PagingText> {
       setState(() {
         //remove duplicate titles
         _chapterTitles = _chapterTitles.toSet().toList();
-        if (_chapterTitles.length > 0) {
+        if (_chapterTitles.length > 0 && selectedChapter == null) {
           selectedChapter = _chapterTitles.first;
         }
       });

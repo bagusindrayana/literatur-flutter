@@ -86,6 +86,10 @@ class _HomePageState extends State<HomePage> {
       if (result != null) {
         PlatformFile file = result.files.first;
         _parseEpub(file);
+      } else {
+        setState(() {
+          loadDataStatus = StatusProcessBook.success;
+        });
       }
     });
   }

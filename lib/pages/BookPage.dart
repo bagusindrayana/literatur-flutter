@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:Literatur/helpers/UIHelper.dart';
 import 'package:Literatur/repositories/TranslateRepository.dart';
 import 'package:flutter/material.dart';
@@ -145,7 +147,8 @@ class _HomePageState extends State<HomePage> {
               Map<String, EpubByteContentFile> _images = bookContent.Images!;
               if (_images.isNotEmpty) {
                 EpubByteContentFile image = _images.values.first;
-                coverImage = images.decodeImage(image.Content!);
+                coverImage =
+                    images.decodeImage(Uint8List.fromList(image.Content!));
               }
             }
             final timeString = DateTime.now().millisecondsSinceEpoch.toString();

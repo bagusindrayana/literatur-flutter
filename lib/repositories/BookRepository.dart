@@ -148,6 +148,9 @@ class BookRepository {
               tmp[index] = chapter;
               book.chapters = tmp;
               await isar.books.put(book);
+            } else {
+              book.chapters = [...book.chapters, chapter];
+              await isar.books.put(book);
             }
           } else {
             book.chapters = [chapter];

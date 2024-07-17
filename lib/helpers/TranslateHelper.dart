@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:logger/logger.dart';
 
 class Translatehelper {
   static List<String> providers = ["Google", "DeepL", "Gemini", "Llama"];
@@ -34,9 +35,9 @@ class Translatehelper {
       String from, String to, String prePrompt, String text) {
     // print("From : ${from} To : ${to}");
     if (to == "Indonesian") {
-      return "Terjemahkan teks ${from} berikut ke bahasa ${to} \n\n Teksnya adalah : \n`${text}`. \n\n, untuk informasi dan instruktsi tambahan terjemahan : \n ${prePrompt}.\n tolong hanya berikan response dan jawab hasil terjemahan saja dan jangan berikan response lainnya.";
+      return "Terjemahkan teks ${from} berikut ke bahasa ${to} \n\n Teksnya adalah : \n`${text}`. \n\n, untuk informasi dan instruktsi tambahan terjemahan : \n ${prePrompt}.\n tolong hanya berikan response dan jawab hasil terjemahan saja dalam format `...teks terjemahan...`.";
     } else {
-      return "Translate the following ${from} texts  to ${to} language : \n\n The texts is : \n`${text}`. \n\n, for aditional information or instruction translation : \n ${prePrompt}.\n please only response or answer with translation result only and never give any response else.";
+      return "Translate the following ${from} texts  to ${to} language : \n\n The texts is : \n`${text}`. \n\n, for aditional information : \n ${prePrompt}.\n please only response or answer with translation result in format response `...translated text...`.";
     }
   }
 
@@ -84,7 +85,7 @@ class Translatehelper {
         defaultValue: dotenv.env['GOOGLE_TRANSLATE_API_KEY'] ?? "");
     var url =
         "https://translation.googleapis.com/language/translate/v2?key=$googleKey";
-    var body = {"q": text, "target": f, "source": f};
+    var body = {"q": text, "target": t, "source": f};
     var headers = {"Content-Type": "application/json"};
     try {
       http.Response response = await http.post(Uri.parse(url),
@@ -117,9 +118,10 @@ class Translatehelper {
     String t = countryId(to);
     var deepLKey = String.fromEnvironment('DEEPL_API_KEY',
         defaultValue: dotenv.env['DEEPL_API_KEY'] ?? "");
+
     var url = "https://api-free.deepl.com/v2/translate";
     var body = {
-      "text": text,
+      "text": [text],
       "target_lang": t,
       "source_lang": f,
     };
@@ -132,6 +134,7 @@ class Translatehelper {
     try {
       http.Response response = await http.post(Uri.parse(url),
           body: jsonEncode(body), headers: headers);
+      Logger().i(response.body);
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         successCallback(data["translations"][0]["text"]);
@@ -165,7 +168,18 @@ class Translatehelper {
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         if (data["choices"] != null && data["choices"].length > 0) {
-          successCallback(data["choices"][0]["message"]["content"]);
+          var result = data["choices"][0]["message"]["content"];
+          if (result != null && result.isNotEmpty) {
+            if (result.contains('Here is the translation') ||
+                result.contains('berikut hasil terjemahan') ||
+                result.contains('berikut adalah terjemahan')) {
+              //split new line and remove first line
+              result = result.split('\n').sublist(1).join('\n');
+            }
+            successCallback(result);
+          } else {
+            errorCallback("Failed to translate text");
+          }
         } else {
           errorCallback("Failed to translate text");
         }

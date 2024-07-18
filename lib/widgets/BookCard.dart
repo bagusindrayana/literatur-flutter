@@ -57,14 +57,26 @@ class _BookCardState extends State<BookCard> {
       ),
       child: InkWell(
         onLongPress: () {
-          if (widget.selectMode != null && widget.selectMode! == false) {
+          if (widget.selectMode != null && widget.selectMode == false) {
             isSelected = true;
           }
           if (widget.onLongPress != null) {
             widget.onLongPress!();
           }
         },
-        onTap: widget.onTap as void Function()?,
+        onTap: () {
+          if (widget.selectMode == true) {
+            setState(() {
+              isSelected = !isSelected;
+            });
+            if (widget.onSelect != null) {
+              widget.onSelect!(isSelected);
+            }
+          }
+          if (widget.onTap != null) {
+            widget.onTap!();
+          }
+        },
         child: Column(
           children: [
             Container(

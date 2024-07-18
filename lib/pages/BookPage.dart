@@ -16,6 +16,7 @@ import 'package:image/image.dart' as images;
 import 'package:flutter/widgets.dart' as widgets;
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:adaptive_theme/adaptive_theme.dart';
+import 'dart:math';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -214,6 +215,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final currentCount = (MediaQuery.of(context).size.width ~/ 250).toInt();
+
+    final minCount = 2;
     return Scaffold(
       appBar: (!multiSelectMode)
           ? AppBar(
@@ -288,8 +292,8 @@ class _HomePageState extends State<HomePage> {
                             top: 8.0, left: 8.0, right: 8.0, bottom: 0),
                         child: GridView.builder(
                           gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: max(currentCount, minCount),
                             crossAxisSpacing: 8.0,
                             mainAxisSpacing: 8.0,
                           ),

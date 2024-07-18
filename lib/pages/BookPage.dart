@@ -162,7 +162,7 @@ class _HomePageState extends State<HomePage> {
               String savePath = '$saveDir/${timeString}_${file.name}';
 
               Book newBook = Book();
-              newBook.title =
+              newBook.title = epubBook.Title ??
                   file.name.replaceAll(file.extension.toString(), "");
               newBook.filePath = savePath;
               newBook.originalFilePath = file.path;

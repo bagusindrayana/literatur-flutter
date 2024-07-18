@@ -155,11 +155,8 @@ class _ChapterContentListState extends State<ChapterContentList> {
       if (c.originalContent!.trim() != "") {
         texts += "${c.title!.trim()} \n";
         //find chapter by key
-        var findChapter = chapters.firstWhereOrNull((element) =>
-            element.translateId > 0 &&
-            element.key == c.key &&
-            element.translateId == widget.translate.id &&
-            element.title == c.title);
+        var findChapter = chapters.firstWhereOrNull(
+            (element) => element.key == c.key && element.title == c.title);
 
         if (findChapter != null) {
           if (selected[chapters.indexOf(findChapter)]) {
@@ -219,23 +216,24 @@ class _ChapterContentListState extends State<ChapterContentList> {
         texts,
         widget.translate.fromLanguage!,
         widget.translate.toLanguage!,
-        "", (String? value) {
+        "", (String? value) async {
       var arr = texts.trim().split("\n");
       if (value != null) {
         var arrTranslate = value.trim().split("\n");
 
         for (var i = 0; i < arr.length; i++) {
           if (i < arrTranslate.length) {
-            var findChapters = chapters.where((element) =>
-                element.translateId > 0 &&
-                element.translateId == widget.translate.id &&
-                element.title!.trim() == arr[i].trim());
-            findChapters.forEach((findChapter) {
+            var findChapters = chapters
+                .where((element) => element.title!.trim() == arr[i].trim());
+            findChapters.forEach((findChapter) async {
               findChapter.translatedTitle = arrTranslate[i];
-              _bookRepository.updateChapter(widget.book.id, findChapter);
+              if (widget.translate.id > 0) {
+                await _bookRepository.updateChapter(
+                    widget.book.id, findChapter);
+              }
             });
           } else {
-            Logger().i("${arr[i].trim()}");
+            print("Not Found : ${arr[i]}");
           }
         }
       }
@@ -246,10 +244,16 @@ class _ChapterContentListState extends State<ChapterContentList> {
           });
         }
       });
-    }, (e) {
-      Logger().e(e);
-      setState(() {});
-      doTranslate(0, true);
+    }, (e, t) {
+      Logger().e(t);
+      setState(() {
+        if (_translateStatus == TranslateStatus.loading) {
+          setState(() {
+            _translateStatus = TranslateStatus.finish;
+          });
+        }
+      });
+      UIHelper.showSnackBar(context, e.toString());
     });
   }
 
@@ -278,7 +282,13 @@ class _ChapterContentListState extends State<ChapterContentList> {
 
     try {
       getChapterContent().then((originalChapters) {
-        var bookChapters = widget.book.chapters;
+        var bookChapters = [];
+        if (widget.translate.id > 0) {
+          bookChapters = widget.book.chapters.where((element) {
+            return element.translateId == widget.translate.id;
+          }).toList();
+        }
+
         selected = List.generate(originalChapters.length, (index) => true);
 
         int order = 0;
@@ -286,9 +296,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
         originalChapters.forEach((Chapter c) {
           if (c.originalContent!.trim() != "") {
             var findChapter = bookChapters.firstWhereOrNull((element) =>
-                element.translateId > 0 &&
                 element.key == c.key &&
-                element.translateId == widget.translate.id &&
                 element.title!.trim() == c.title!.trim());
             if (findChapter != null) {
               findChapter.order = order;
@@ -512,7 +520,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
     int index = chapters.indexOf(chapter);
     // var findChapter = widget.book.chapters.firstWhereOrNull((element) =>
     //     element.key == chapter.key &&
-    //     element.translateId == widget.translate.id &&
+    //
     //     element.title == chapter.title);
 
     showDialog(

@@ -2,7 +2,6 @@
 on:
   # 2
   push:
-    branches: [ "main" ]
     tags:
     - '*'
 # 4
@@ -28,7 +27,7 @@ jobs:
         flutter-version-file: pubspec.yaml
     - run: flutter --version
     - run: flutter pub get
-    - run: flutter build --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},GOOGLE_TRANSLATE_API_KEY=${{ secrets.GOOGLE_TRANSLATE_API_KEY }},GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }} apk --release
+    - run: flutter build apk --release --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} --dart-define=GOOGLE_TRANSLATE_API_KEY=${{ secrets.GOOGLE_TRANSLATE_API_KEY }} --dart-define=GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} --dart-define=DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}
     - name: Rename file 
       run: mv build/app/outputs/flutter-apk/app-release.apk ${{ github.ref }}.apk
     - name: Create Github Release

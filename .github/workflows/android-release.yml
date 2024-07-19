@@ -32,9 +32,9 @@ jobs:
       run: touch .env
     - run: flutter build apk --release --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} --dart-define=GOOGLE_TRANSLATE_API_KEY=${{ secrets.GOOGLE_TRANSLATE_API_KEY }} --dart-define=GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} --dart-define=DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}
     - name: Rename file 
-      run: mv build/app/outputs/flutter-apk/app-release.apk ${{ github.ref }}.apk
+      run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/${{ github.ref_name }}.apk
     - name: Create Github Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "${{ github.ref }}.apk"
+        artifacts: "build/app/outputs/flutter-apk/${{ github.ref_name }}.apk"
         token: ${{ secrets.PERSONAL_RELEASE_TOKEN }}

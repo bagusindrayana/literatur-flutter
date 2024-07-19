@@ -266,77 +266,82 @@ class _HomePageState extends State<HomePage> {
             const Center(
               child: CircularProgressIndicator(),
             )
-          else if (books.length == 0)
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  _addBook();
-                },
-                child: Text('Add Book'),
-              ),
-            )
           else
             Expanded(
               child: Stack(
                 children: [
                   if (showLoading)
-                    Center(
+                    const Center(
                       child: CircularProgressIndicator(),
                     ),
                   RefreshIndicator(
                       onRefresh: () async {
                         return _loadData();
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                            top: 8.0, left: 8.0, right: 8.0, bottom: 0),
-                        child: GridView.builder(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: max(currentCount, minCount),
-                            crossAxisSpacing: 8.0,
-                            mainAxisSpacing: 8.0,
-                          ),
-                          itemCount: books.length,
-                          itemBuilder: (context, index) {
-                            return BookCard(
-                              title: "${books[index].title}",
-                              thumbnail: books[index].coverImage != null
-                                  ? widgets.Image.file(
-                                      File("${books[index].coverImage}"),
-                                      fit: BoxFit.contain)
-                                  : null,
-                              selectMode: multiSelectMode,
-                              isSelected:
-                                  multiSelectBooks.contains(books[index]),
-                              onSelect: (isSelected) {
-                                if (isSelected) {
-                                  multiSelectBooks.add(books[index]);
-                                } else {
-                                  multiSelectBooks.remove(books[index]);
-                                }
-                                setState(() {});
-                              },
-                              onLongPress: () {
-                                if (!multiSelectMode) {
-                                  multiSelectMode = true;
-                                  multiSelectBooks.add(books[index]);
-                                  setState(() {});
-                                }
-                              },
-                              onTap: () {
-                                if (!multiSelectMode) {
-                                  Navigator.pushNamed(context, '/view',
-                                          arguments: books[index])
-                                      .then((v) {
-                                    _loadData();
-                                  });
-                                }
-                              },
-                            );
-                          },
-                        ),
-                      ))
+                      child: (books.length > 0)
+                          ? Padding(
+                              padding: const EdgeInsets.only(
+                                  top: 8.0, left: 8.0, right: 8.0, bottom: 0),
+                              child: GridView.builder(
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: max(currentCount, minCount),
+                                  crossAxisSpacing: 8.0,
+                                  mainAxisSpacing: 8.0,
+                                ),
+                                itemCount: books.length,
+                                itemBuilder: (context, index) {
+                                  return BookCard(
+                                    title: "${books[index].title}",
+                                    thumbnail: books[index].coverImage != null
+                                        ? widgets.Image.file(
+                                            File("${books[index].coverImage}"),
+                                            fit: BoxFit.contain)
+                                        : null,
+                                    selectMode: multiSelectMode,
+                                    isSelected:
+                                        multiSelectBooks.contains(books[index]),
+                                    onSelect: (isSelected) {
+                                      if (isSelected) {
+                                        multiSelectBooks.add(books[index]);
+                                      } else {
+                                        multiSelectBooks.remove(books[index]);
+                                      }
+                                      setState(() {});
+                                    },
+                                    onLongPress: () {
+                                      if (!multiSelectMode) {
+                                        multiSelectMode = true;
+                                        multiSelectBooks.add(books[index]);
+                                        setState(() {});
+                                      }
+                                    },
+                                    onTap: () {
+                                      if (!multiSelectMode) {
+                                        Navigator.pushNamed(context, '/view',
+                                                arguments: books[index])
+                                            .then((v) {
+                                          _loadData();
+                                        });
+                                      }
+                                    },
+                                  );
+                                },
+                              ),
+                            )
+                          : Align(
+                              alignment: Alignment.center,
+                              child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text("No books found"),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        _addBook();
+                                      },
+                                      child: Text('Add Book'),
+                                    )
+                                  ])))
                 ],
               ),
             ),
@@ -346,6 +351,7 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: books.length > 0
           ? (!multiSelectMode)
               ? FloatingActionButton(
+                  tooltip: "Add new book",
                   onPressed: () {
                     _addBook();
                   },
@@ -355,6 +361,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 )
               : FloatingActionButton(
+                  tooltip: "Delete selected books",
                   onPressed: () {
                     _multiDeleteBooks();
                   },

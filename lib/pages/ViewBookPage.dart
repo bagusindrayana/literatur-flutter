@@ -126,7 +126,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
     if (context.mounted) {
       // set up the AlertDialog
       AlertDialog alert = AlertDialog(
-        title: Text("Transalate Book"),
+        title: const Text("Transalate Book"),
         contentPadding: EdgeInsets.only(right: 8, left: 8),
         scrollable: true,
         content: Container(
@@ -137,11 +137,12 @@ class _ViewBookPageState extends State<ViewBookPage> {
                   child: (translates.length == 0)
                       ? Column(
                           children: [
-                            Center(
+                            const Center(
                               child: Text(
                                   "No translate found, please add translate first"),
                             ),
                             IconButton(
+                                tooltip: "Add Translate",
                                 onPressed: () {
                                   Navigator.of(context).pop();
                                   Navigator.pushNamed(
@@ -154,6 +155,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
                       : Column(
                           children: [
                             IconButton(
+                                tooltip: "Add Translate",
                                 onPressed: () {
                                   Navigator.pushNamed(
                                       context, '/translate-book',
@@ -169,6 +171,8 @@ class _ViewBookPageState extends State<ViewBookPage> {
                                 title: Text(
                                     "${translate.fromLanguage} to ${translate.toLanguage}"),
                                 trailing: IconButton(
+                                  tooltip:
+                                      "Edit Translate ${widget.book.title} : ${translate.fromLanguage} to ${translate.toLanguage}",
                                   onPressed: () async {
                                     Navigator.of(context).pop();
                                     Navigator.pushNamed(
@@ -239,6 +243,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
         title: Text("${book.title}"),
         actions: [
           IconButton(
+              tooltip: "Change Theme",
               onPressed: () {
                 AdaptiveTheme.of(context).toggleThemeMode();
               },
@@ -246,6 +251,7 @@ class _ViewBookPageState extends State<ViewBookPage> {
                   ? Icon(Icons.light_mode)
                   : Icon(Icons.dark_mode)),
           IconButton(
+              tooltip: "Select Translate",
               onPressed: () {
                 openTransalteMenu();
               },
@@ -558,6 +564,7 @@ class _PagingTextState extends State<PagingText> {
           children: [
             // if (_pageTexts.length > 0) Text(_pageTexts[_currentIndex].title),
             DropdownButton<String>(
+                hint: Text("Select Chapter"),
                 value: selectedChapter,
                 icon: const Icon(Icons.arrow_downward),
                 elevation: 16,
@@ -666,6 +673,7 @@ class _PagingTextState extends State<PagingText> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
+                    tooltip: "First Page",
                     icon: Icon(Icons.first_page),
                     onPressed: () {
                       setState(() {
@@ -675,6 +683,7 @@ class _PagingTextState extends State<PagingText> {
                     },
                   ),
                   IconButton(
+                    tooltip: 'Previous Page',
                     icon: Icon(Icons.navigate_before),
                     onPressed: () {
                       prevPage();
@@ -686,12 +695,14 @@ class _PagingTextState extends State<PagingText> {
                         : '${_currentIndex + 1}/${_pageTexts.length}',
                   ),
                   IconButton(
+                    tooltip: 'Next Page',
                     icon: Icon(Icons.navigate_next),
                     onPressed: () {
                       nextPage();
                     },
                   ),
                   IconButton(
+                    tooltip: "Last Page",
                     icon: Icon(Icons.last_page),
                     onPressed: () {
                       setState(() {

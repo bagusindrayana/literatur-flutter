@@ -60,6 +60,8 @@ class _EditTranslateBookPageState extends State<EditTranslateBookPage> {
         title: Text('Edit : ${widget.book.title}'),
         actions: [
           IconButton(
+            tooltip:
+                "Delete Translate ${widget.book.title}: ${widget.translate.fromLanguage} to ${widget.translate.toLanguage}",
             icon: Icon(Icons.delete),
             onPressed: () {
               deleteTranslate();

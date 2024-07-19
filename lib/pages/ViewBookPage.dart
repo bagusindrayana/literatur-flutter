@@ -245,7 +245,13 @@ class _ViewBookPageState extends State<ViewBookPage> {
           IconButton(
               tooltip: "Change Theme",
               onPressed: () {
-                AdaptiveTheme.of(context).toggleThemeMode();
+                setState(() {
+                  if (AdaptiveTheme.of(context).mode.isDark) {
+                    AdaptiveTheme.of(context).setLight();
+                  } else {
+                    AdaptiveTheme.of(context).setDark();
+                  }
+                });
               },
               icon: AdaptiveTheme.of(context).mode.isDark
                   ? Icon(Icons.light_mode)
@@ -503,7 +509,11 @@ class _PagingTextState extends State<PagingText> {
         //remove duplicate titles
         _chapterTitles = _chapterTitles.toSet().toList();
         if (_chapterTitles.length > 0 && selectedChapter == null) {
-          selectedChapter = _chapterTitles.first;
+          if (_currentIndex <= 0) {
+            selectedChapter = _chapterTitles.first;
+          } else {
+            selectedChapter = _pageTexts[_currentIndex].title;
+          }
         }
       });
     }

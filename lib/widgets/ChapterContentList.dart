@@ -155,9 +155,8 @@ class _ChapterContentListState extends State<ChapterContentList> {
       if (c.originalContent!.trim() != "") {
         texts += "${c.title!.trim()} \n";
         //find chapter by key
-        var findChapter = chapters.firstWhereOrNull(
-            (element) => element.key == c.key && element.title == c.title);
-
+        var findChapter = chapters.firstWhereOrNull((element) =>
+            element.key == c.key && element.title!.trim() == c.title!.trim());
         if (findChapter != null) {
           if (selected[chapters.indexOf(findChapter)]) {
             findChapter.order = order;
@@ -257,24 +256,7 @@ class _ChapterContentListState extends State<ChapterContentList> {
     });
   }
 
-  // setState(() {
-  //     chapters = widget.book.chapters.where(
-  //       (element) {
-  //         return element.translateId == widget.translate.id;
-  //       },
-  //     ).toList()
-  //       ..sort((a, b) => a.order.compareTo(b.order));
-  //   });
   void getTranslateChapters() async {
-    // chapters = await getChapterContent();
-    // //set selected
-    // selected = List.generate(chapters.length, (index) => true);
-    // setState(() {
-    //   // chapters = book.chapters
-    //   //     .where((element) => element.translateId == widget.translate.id)
-    //   //     .toList()
-    //   //   ..sort((a, b) => a.order.compareTo(b.order));
-    // });
     setState(() {
       _loadDataStatus = LoadDataStatus.loading;
     });
@@ -492,10 +474,11 @@ class _ChapterContentListState extends State<ChapterContentList> {
 
   void saveChapter(Chapter chapter) {
     var index = chapters.indexOf(chapter);
-    chapters[index] = chapter;
+    setState(() {
+      chapters[index] = chapter;
+    });
 
     saveBook();
-    setState(() {});
   }
 
   void saveBook() async {
@@ -518,10 +501,6 @@ class _ChapterContentListState extends State<ChapterContentList> {
 
   void detailChapter(Chapter chapter) {
     int index = chapters.indexOf(chapter);
-    // var findChapter = widget.book.chapters.firstWhereOrNull((element) =>
-    //     element.key == chapter.key &&
-    //
-    //     element.title == chapter.title);
 
     showDialog(
         context: context,
@@ -589,7 +568,8 @@ class _ChapterContentListState extends State<ChapterContentList> {
                                   onPressed: () {
                                     chapter.translatedContent =
                                         _contentController.text;
-                                    chapter.title = _titleController.text;
+                                    chapter.translatedTitle =
+                                        _titleController.text;
                                     saveChapter(chapter);
                                     Navigator.of(context).pop();
                                   },

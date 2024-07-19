@@ -85,7 +85,7 @@ class Translatehelper {
         defaultValue: dotenv.env['GOOGLE_TRANSLATE_API_KEY'] ?? "");
     var url =
         "https://translation.googleapis.com/language/translate/v2?key=$googleKey";
-    var body = {"q": text, "target": t, "source": f};
+    var body = {"q": text, "target": t, "source": f, "format": "text"};
     var headers = {"Content-Type": "application/json"};
     try {
       http.Response response = await http.post(Uri.parse(url),

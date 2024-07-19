@@ -225,7 +225,13 @@ class _HomePageState extends State<HomePage> {
               actions: [
                 IconButton(
                     onPressed: () {
-                      AdaptiveTheme.of(context).toggleThemeMode();
+                      setState(() {
+                        if (AdaptiveTheme.of(context).mode.isDark) {
+                          AdaptiveTheme.of(context).setLight();
+                        } else {
+                          AdaptiveTheme.of(context).setDark();
+                        }
+                      });
                     },
                     icon: AdaptiveTheme.of(context).mode.isDark
                         ? Icon(Icons.light_mode)

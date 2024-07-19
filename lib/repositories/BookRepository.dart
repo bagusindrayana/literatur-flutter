@@ -119,7 +119,9 @@ class BookRepository {
   //add chapter
   Future<void> addChapter(int id, Chapter chapter) async {
     final isar = await initDB();
-    if (isar != null) {
+    if (isar != null &&
+        chapter.translateId != null &&
+        chapter.translateId != 0) {
       await isar.writeTxn<void>(() async {
         final book = await isar.books.get(id);
         if (book != null) {
@@ -133,7 +135,9 @@ class BookRepository {
   //update chapter
   Future<void> updateChapter(int bookId, Chapter chapter) async {
     final isar = await initDB();
-    if (isar != null) {
+    if (isar != null &&
+        chapter.translateId != null &&
+        chapter.translateId != 0) {
       await isar.writeTxn<void>(() async {
         final book = await isar.books.get(bookId);
 

@@ -41,7 +41,7 @@ dependencies:
   epubx:
     git:
       url: https://github.com/bagusindrayana/epubx.dart.git
-      ref: master
+      ref: update-image
       version: ^4.0.2
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1

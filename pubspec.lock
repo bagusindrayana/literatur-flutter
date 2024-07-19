@@ -277,11 +277,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: master
-      resolved-ref: f2c1661cb4e9625fe6d10028c7956fbfb2b22ef5
+      ref: update-image
+      resolved-ref: f2a2d140b1e907ccbd37836b68f5671a2dc4e748
       url: "https://github.com/bagusindrayana/epubx.dart.git"
     source: git
-    version: "4.0.1"
+    version: "4.0.2"
   fake_async:
     dependency: transitive
     description:

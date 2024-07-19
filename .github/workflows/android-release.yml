@@ -26,6 +26,7 @@ jobs:
         channel: stable
         flutter-version-file: pubspec.yaml
     - run: flutter --version
+    - run: flutter clean cache
     - run: flutter pub get
     - run: flutter build apk --release --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} --dart-define=GOOGLE_TRANSLATE_API_KEY=${{ secrets.GOOGLE_TRANSLATE_API_KEY }} --dart-define=GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} --dart-define=DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}
     - name: Rename file 
